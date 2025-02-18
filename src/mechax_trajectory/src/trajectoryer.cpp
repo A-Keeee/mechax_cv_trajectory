@@ -65,7 +65,7 @@ Trajectoryer::Trajectoryer() : Node("trajectory")
         "/angle/init", 10, std::bind(&Trajectoryer::angle_callback, this, std::placeholders::_1));
 
     power_rune_sub_ = this->create_subscription<geometry_msgs::msg::PointStamped>(
-        "/prediction", 10, std::bind(&Trajectoryer::power_rune_callback, this, std::placeholders::_1));
+        "/rune/prediction", 10, std::bind(&Trajectoryer::power_rune_callback, this, std::placeholders::_1));
 
     maker_pub_ = this->create_publisher<visualization_msgs::msg::Marker>(
         "/aiming_point", 10);
@@ -656,7 +656,9 @@ void Trajectoryer::angle_callback(const auto_aim_interfaces::msg::ReceiveSerial 
 }
 
 void Trajectoryer::power_rune_callback(const geometry_msgs::msg::PointStamped msg) {
-    if (!is_rune) return;
+    if (!is_rune) {
+        std::cout<<"not rune"<<std::endl;
+        return;}
     two_resistance_model(
             msg.point.x,
             msg.point.y,

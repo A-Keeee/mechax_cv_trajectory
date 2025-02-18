@@ -75,6 +75,7 @@ public:
     rclcpp::TimerBase::SharedPtr init_timer_;
 };
 
+
 } // namespace qianli_rm_rune
 
 #endif // RM_RUNE_NODE_HPP
