@@ -82,7 +82,7 @@ Trajectoryer::Trajectoryer() : Node("trajectory")
 void  Trajectoryer::parameters_init()
 {
     //----------------------------------------------------
-    is_hero = false; // 根据情况自己修改，英雄大弹丸为1,步兵小弹丸为0
+    is_hero = true; // 根据情况自己修改，英雄大弹丸为1,步兵小弹丸为0
     //----------------------------------------------------
     if(is_hero)
     {
