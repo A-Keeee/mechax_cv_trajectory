@@ -39,7 +39,6 @@ def generate_launch_description():
         extra_arguments=[{'use_intra_process_comms': True}],
     )
 
-
     serial_driver_node = Node(
         package='rm_serial_driver',
         executable='rm_serial_driver_node',
@@ -78,7 +77,6 @@ def generate_launch_description():
         actions=[trajectory_node],
     )
 
-
     """Generate launch description with multiple components."""
     container = ComposableNodeContainer(
             name='image_container',
@@ -88,6 +86,7 @@ def generate_launch_description():
             composable_node_descriptions=[
                 cam_detector,
                 detector_node,
+                #openvino_detector_node,
             ],
             output='both',
     )
