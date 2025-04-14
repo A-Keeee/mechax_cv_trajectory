@@ -86,7 +86,7 @@ void  Trajectoryer::parameters_init()
     //----------------------------------------------------
     if(is_hero)
     {
-        v0 = 16; // m/s
+        v0 = 14; // m/s
     }
     else
     {

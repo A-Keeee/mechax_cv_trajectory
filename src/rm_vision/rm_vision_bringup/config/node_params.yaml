@@ -1,7 +1,7 @@
 /camera_node:
   ros__parameters:
     camera_info_url: package://rm_vision_bringup/config/camera_info.yaml
-    exposure_time: 5000
+    exposure_time: 3000
     gain: 16.0
 
 /serial_driver:
@@ -15,7 +15,7 @@
 
 /armor_detector:
   ros__parameters:
-    debug: false
+    debug: true
 
     detect_color: 1
     binary_thres: 80

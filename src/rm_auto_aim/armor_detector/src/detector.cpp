@@ -27,6 +27,7 @@ Detector::Detector(
 
 std::vector<Armor> Detector::detect(const cv::Mat & input)
 {
+  // cv::rotate(input,input,cv::ROTATE_180);
   binary_img = preprocessImage(input);
   lights_ = findLights(input, binary_img);
   armors_ = matchLights(lights_);
