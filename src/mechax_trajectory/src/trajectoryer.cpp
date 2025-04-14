@@ -82,11 +82,11 @@ Trajectoryer::Trajectoryer() : Node("trajectory")
 void  Trajectoryer::parameters_init()
 {
     //----------------------------------------------------
-    is_hero = false; // 根据情况自己修改，英雄大弹丸为1,步兵小弹丸为0
+    is_hero = true; // 根据情况自己修改，英雄大弹丸为1,步兵小弹丸为0
     //----------------------------------------------------
     if(is_hero)
     {
-        v0 = 16; // m/s
+        v0 = 14; // m/s
     }
     else
     {
@@ -580,7 +580,7 @@ void Trajectoryer::target_callback(const auto_aim_interfaces::msg::Target msg)
             }
             else
             {
-                result.pitch = send_pitch;
+                result.pitch = -send_pitch;
                 result.yaw = send_yaw;
                 result.distance = distance;
             }
