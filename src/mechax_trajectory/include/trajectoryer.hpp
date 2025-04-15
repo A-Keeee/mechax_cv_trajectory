@@ -62,7 +62,9 @@ public:
 
     void angle_callback(const auto_aim_interfaces::msg::ReceiveSerial msg);
 
-    void power_rune_callback(geometry_msgs::msg::PointStamped msg);
+    void hero_callback(geometry_msgs::msg::PointStamped msg);
+
+
 
     // parameters
     //------------------
@@ -106,13 +108,13 @@ public:
     //------------------
     float randa;
     bool is_hero;
-    bool is_rune;
+    bool is_assist;
     //------------------
     // Subsciption
     //------------------
     rclcpp::Subscription<auto_aim_interfaces::msg::Target>::SharedPtr target_sub_;
     rclcpp::Subscription<auto_aim_interfaces::msg::ReceiveSerial>::SharedPtr angle_sub_;
-    rclcpp::Subscription<geometry_msgs::msg::PointStamped>::SharedPtr power_rune_sub_;
+    rclcpp::Subscription<geometry_msgs::msg::PointStamped>::SharedPtr hero_sub_;
     //------------------
     // Publisher
     //------------------

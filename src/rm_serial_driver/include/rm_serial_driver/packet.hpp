@@ -14,7 +14,7 @@ namespace rm_serial_driver
 struct ReceivePacket
 {
   uint8_t header = 0x5A;
-  uint8_t is_rune;
+  uint8_t is_assist;
   uint8_t detect_color;  // 5-red 6-blue
   uint8_t is_reset;
   float roll;                // rad 

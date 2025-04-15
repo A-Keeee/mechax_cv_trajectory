@@ -39,10 +39,10 @@ def generate_launch_description():
         extra_arguments=[{'use_intra_process_comms': True}],
     )
 
-    rune_composable_node = ComposableNode(
-        package='rm_rune',
-        plugin='qianli_rm_rune::RuneNode',
-        name='rm_rune',
+    hero_composable_node = ComposableNode(
+        package='rm_hero',
+        plugin='qianli_rm_hero::HeroNode',
+        name='rm_hero',
         parameters=[node_params],
         extra_arguments=[{'use_intra_process_comms': True}],
     ) 
@@ -73,9 +73,9 @@ def generate_launch_description():
             package='rclcpp_components',
             executable='component_container_mt',
             composable_node_descriptions=[
-                cam_detector,
+                # cam_detector,
                 #detector_node,
-                rune_composable_node,
+                hero_composable_node,
             ],
             output='both',
     )

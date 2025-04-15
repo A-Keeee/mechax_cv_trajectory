@@ -51,6 +51,14 @@ def generate_launch_description():
                        'serial_driver:='+launch_params['serial_log_level']],
     )
 
+    hero_composable_node = ComposableNode(
+        package='rm_hero',
+        plugin='qianli_rm_hero::HeroNode',
+        name='rm_hero',
+        parameters=[node_params],
+        extra_arguments=[{'use_intra_process_comms': True}],
+    ) 
+
     trajectory_node = Node(
         package='mechax_trajectory',
         executable='mechax_trajectory',
@@ -87,6 +95,7 @@ def generate_launch_description():
                 cam_detector,
                 detector_node,
                 #openvino_detector_node,
+                hero_composable_node,
             ],
             output='both',
     )

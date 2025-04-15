@@ -26,12 +26,14 @@ namespace qianli_rm_hero
         tf2_buffer_->setCreateTimerInterface(timer_interface);
         tf2_listener_ = std::make_shared<tf2_ros::TransformListener>(*tf2_buffer_);
 
+
     }
 
 
 
     void HeroNode::Hero_pose_callback(const auto_aim_interfaces::msg::ReceiveSerial msg)
     {   
+        std::cout << "debug" << std::endl;
 
         // 新增帧率计算逻辑
         auto current_time = this->now();
@@ -46,26 +48,51 @@ namespace qianli_rm_hero
         }
 
 
-        // 创建消息并填充预测的3D点位(相机坐标系下的xyz)
+        // 创建消息并填充当前英雄坐标
         geometry_msgs::msg::PointStamped point_msg;
-        point_msg.header.frame_id = "camera_optical_frame";
-        // point_msg.header.stamp = msg->header.stamp;
-        // point_msg.point.x = tvec.at<double>(0, 0)/100;
-        // point_msg.point.y = tvec.at<double>(1, 0)/100;
-        // point_msg.point.z = tvec.at<double>(2, 0)/100;
+        point_msg.header.frame_id = "odom";
+        point_msg.header.stamp = msg.header.stamp;
+        point_msg.point.x = msg.hero_pose_x;
+        point_msg.point.y = msg.hero_pose_y;
 
 
-        geometry_msgs::msg::PointStamped transformed_msg;
+
+        // 梯高下 z = 200mm;
+        // 梯高上 z = 600mm;
+        // 公路 z = 200mm;
+        if (detect_color == 1) {//打蓝方
+            if (msg.hero_pose_x > blue_x1 && msg.hero_pose_x < blue_x2 && msg.hero_pose_y > blue_y1 && msg.hero_pose_y < blue_y2) {
+                point_msg.point.z = 600.0; 
+            } else {
+                point_msg.point.z = 200.0; 
+            }
+        } else {//打红方
+            if (msg.hero_pose_x > red_x1 && msg.hero_pose_x < red_x2 && msg.hero_pose_y > red_y1 && msg.hero_pose_y < red_y2) {
+                point_msg.point.z = 600.0; 
+            } else {
+                point_msg.point.z = 200.0; 
+            }
+        }
+
+        point_msg.point.z += hero_gimbal_height_; // 加上云台高度
+
+        //此时坐标为英雄当前实时坐标
+        // 进行坐标转换需要将坐标原点移动到当前英雄坐标系原点
+        if (detect_color == 1){
+            point_msg.point.x = blue_base_point_.x - point_msg.point.x;
+            point_msg.point.y = blue_base_point_.y - point_msg.point.y;
+            point_msg.point.z = base_height_ - point_msg.point.z;
+        } else {
+            point_msg.point.x = red_base_point_.x - point_msg.point.x;
+            point_msg.point.y = red_base_point_.y - point_msg.point.y;
+            point_msg.point.z = base_height_ - point_msg.point.z;
+        }
+
+
         try {
-            transformed_msg.point = tf2_buffer_->transform(point_msg, "odom").point;
-            // double temp = transformed_msg.point.x;
-            // transformed_msg.point.x = transformed_msg.point.y;
-            // transformed_msg.point.y = temp;
-            transformed_msg.header.frame_id = "odom";
-            transformed_msg.header.stamp = point_msg.header.stamp;
-            hero_pose_pub_->publish(transformed_msg);
+            hero_pose_pub_->publish(point_msg);
         } catch (tf2::TransformException& ex) {
-            RCLCPP_WARN(get_logger(), "无法将坐标从 camera_link 转换到 odom：%s", ex.what());
+            RCLCPP_WARN(get_logger(), "HERO无法正确发布坐标%s", ex.what());
         }
     }
 } // namespace qianli_rm_hero

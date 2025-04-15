@@ -64,8 +64,8 @@ Trajectoryer::Trajectoryer() : Node("trajectory")
     angle_sub_ = this->create_subscription<auto_aim_interfaces::msg::ReceiveSerial>(
         "/angle/init", 10, std::bind(&Trajectoryer::angle_callback, this, std::placeholders::_1));
 
-    power_rune_sub_ = this->create_subscription<geometry_msgs::msg::PointStamped>(
-        "/prediction", 10, std::bind(&Trajectoryer::power_rune_callback, this, std::placeholders::_1));
+    hero_sub_ = this->create_subscription<geometry_msgs::msg::PointStamped>(
+        "/hero/prediction", 10, std::bind(&Trajectoryer::hero_callback, this, std::placeholders::_1));
 
     maker_pub_ = this->create_publisher<visualization_msgs::msg::Marker>(
         "/aiming_point", 10);
@@ -532,7 +532,7 @@ void Trajectoryer::target_callback(const auto_aim_interfaces::msg::Target msg)
     r_2 = msg.radius_2;
     dz = msg.dz;
 
-    if (is_rune) return;
+    if (is_assist) return;
 
     if(is_tracking)
     {
@@ -652,11 +652,11 @@ void Trajectoryer::angle_callback(const auto_aim_interfaces::msg::ReceiveSerial 
         v0 = msg.v0;
     }
 
-    is_rune = msg.is_rune;
+    is_assist = msg.is_assist;
 }
 
-void Trajectoryer::power_rune_callback(const geometry_msgs::msg::PointStamped msg) {
-    if (!is_rune) return;
+void Trajectoryer::hero_callback(const geometry_msgs::msg::PointStamped msg) {
+    if (!is_assist) return;
     two_resistance_model(
             msg.point.x,
             msg.point.y,
@@ -703,6 +703,7 @@ void Trajectoryer::power_rune_callback(const geometry_msgs::msg::PointStamped ms
     }
     result_pub_->publish(result);
 }
+
 int main(int argc, char *argv[])
 {
     rclcpp::init(argc, argv);

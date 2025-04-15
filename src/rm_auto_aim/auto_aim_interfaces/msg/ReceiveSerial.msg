@@ -4,6 +4,6 @@ float64 pitch
 float64 v0
 float64 motor_speed
 float64 serial_time
-bool is_rune
+bool is_assist
 float64 hero_pose_x
 float64 hero_pose_y

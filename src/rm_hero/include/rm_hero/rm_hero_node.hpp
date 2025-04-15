@@ -1,4 +1,4 @@
-// rm_rune_node.hpp
+
 
 #ifndef RM_HERO_NODE_HPP
 #define RM_HERO_NODE_HPP
@@ -62,7 +62,38 @@ public:
     size_t frame_count_;
     rclcpp::Time last_time_;
 
+
+    //英雄机器人参数
     cv::Point2f hero_point_;
+    float hero_gimbal_height_;
+    
+
+    //参数汇总，所有参数单位均为mm
+
+    //基地高度
+    float base_height_ = 1121.5; 
+    //蓝方基地参数
+    cv::Point2f blue_base_point_ = cv::Point2f(25591.0f, 7500.0f);    
+    //红方基地参数
+    cv::Point2f red_base_point_ = cv::Point2f(2409.0f, 7500.0f);
+
+
+    int detect_color = 0; // 0:红色 1:蓝色
+
+    //红方梯高参数（大约在以下范围的矩形框中）
+    float red_x1 = 5928.0;
+    float red_x2 = 10229.0;
+    float red_y1 = 10950.0;
+    float red_y2 = 12500.0;
+
+    //蓝方梯高参数（大约在以下范围的矩形框中）
+    float blue_x1 = 17771.0;
+    float blue_x2 = 22072.0;
+    float blue_y1 = 2500.0;
+    float blue_y2 = 4050.0;
+
+
+
 
     // TF2 缓存和监听器
     std::shared_ptr<tf2_ros::Buffer> tf2_buffer_;
