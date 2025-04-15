@@ -14,8 +14,6 @@ endif()
 
 # 添加包含路径
 include_directories(
-  ${ONNXRUNTIME_ROOTDIR}/include
-  ${ONNXRUNTIME_ROOTDIR}/include/onnxruntime/core/session
   ${CMAKE_SOURCE_DIR}/include
 )
 
@@ -33,8 +31,9 @@ find_package(tf2_ros REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
 find_package(image_transport REQUIRED)
 find_package(pluginlib REQUIRED)
-find_package(glog REQUIRED)
-find_package(Ceres REQUIRED)
+find_package(auto_aim_interfaces REQUIRED)
+
+
  
 include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}/include
@@ -47,17 +46,17 @@ include_directories(
 # further dependencies manually.
 # find_package(<dependency> REQUIRED)
 
-include_directories(${CMAKE_SOURCE_DIR}/include/rm_rune)
+include_directories(${CMAKE_SOURCE_DIR}/include/rm_hero)
 
 add_library(${PROJECT_NAME} SHARED
   src/rm_hero_node.cpp
 )
-ament_target_dependencies(${PROJECT_NAME} rclcpp rclcpp_components sensor_msgs geometry_msgs cv_bridge OpenCV tf2 tf2_ros image_transport tf2_geometry_msgs)
-
+ament_target_dependencies(${PROJECT_NAME} rclcpp rclcpp_components sensor_msgs geometry_msgs cv_bridge OpenCV tf2 tf2_ros image_transport tf2_geometry_msgs auto_aim_interfaces)
+ 
 target_link_directories(${PROJECT_NAME} PUBLIC
       $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
       $<INSTALL_INTERFACE:include>)
-target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBS} ceres glog)
+target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBS})
 
 rclcpp_components_register_node(${PROJECT_NAME}
   PLUGIN qianli_rm_hero::HeroNode

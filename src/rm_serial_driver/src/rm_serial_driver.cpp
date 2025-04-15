@@ -227,9 +227,11 @@ void RMSerialDriver::receiveData()
                       receive_serial_msg_.pitch = packet.pitch;
                       receive_serial_msg_.yaw = packet.yaw;
                       receive_serial_msg_.v0 = packet.v0;
-                      receive_serial_msg_.motor_speed = packet.motor_speed;
+                      // receive_serial_msg_.motor_speed = packet.motor_speed;
                       receive_serial_msg_.serial_time = timestamp_offset_;
                       receive_serial_msg_.is_rune = packet.is_rune;
+                      receive_serial_msg_.hero_pose_x = packet.hero_pose_x; //英雄坐标
+                      receive_serial_msg_.hero_pose_y = packet.hero_pose_y;
                       serial_pub_->publish(receive_serial_msg_);
 
                       total_count++;

@@ -13,6 +13,11 @@
 #include "sensor_msgs/msg/camera_info.hpp"
 #include "geometry_msgs/msg/point_stamped.hpp"
 
+#include "auto_aim_interfaces/msg/receive_serial.hpp"
+#include "auto_aim_interfaces/msg/send_serial.hpp"
+#include "auto_aim_interfaces/msg/target.hpp"
+#include "auto_aim_interfaces/msg/bias.hpp"
+
 
 
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
@@ -25,7 +30,7 @@
 #include <tf2/convert.h>
 #include <image_transport/image_transport.hpp> // 新增
 
-namespace qianli_rm_rune
+namespace qianli_rm_hero
 {
 
 class HeroNode : public rclcpp::Node
@@ -33,8 +38,10 @@ class HeroNode : public rclcpp::Node
 public:
     HeroNode(const rclcpp::NodeOptions & options);
 
-    void Hero_image_callback(const sensor_msgs::msg::Image::SharedPtr msg ,
-                            const sensor_msgs::msg::PointStamped::SharedPtr heroself_pose);
+
+    void Hero_pose_callback(const auto_aim_interfaces::msg::ReceiveSerial msg);
+                        
+    
 
     // 发布者
     rclcpp::Publisher<geometry_msgs::msg::PointStamped>::SharedPtr hero_pose_pub_;
@@ -42,16 +49,20 @@ public:
     image_transport::Publisher result_image_pub_; // 修改类型为 image_transport::Publisher
 
     // 订阅者
-    rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr hero_image_sub_;
-    rclcpp::Subscription<sensor_msgs::msg::CameraInfo>::SharedPtr cam_info_sub_;
-    std::shared_ptr<sensor_msgs::msg::CameraInfo> cam_info_;
-    rclcpp::Subscription<sensor_msgs::msg::PointStamped>::SharedPtr heroself_pose_sub_;//英雄当前姿态
-    std::shared_ptr<sensor_msgs::msg::PointStamped> heroself_pose_;
+    // rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr hero_image_sub_;
+    // rclcpp::Subscription<sensor_msgs::msg::CameraInfo>::SharedPtr cam_info_sub_;
+    // std::shared_ptr<sensor_msgs::msg::CameraInfo> cam_info_;
+    // rclcpp::Subscription<sensor_msgs::msg::PointStamped>::SharedPtr heroself_pose_sub_;//英雄当前姿态
+    // std::shared_ptr<sensor_msgs::msg::PointStamped> heroself_pose_;
+    rclcpp::Subscription<auto_aim_interfaces::msg::ReceiveSerial>::SharedPtr hero_pose_sub_;
+
 
     // 相机矩阵
     cv::Mat camera_matrix_;
     size_t frame_count_;
     rclcpp::Time last_time_;
+
+    cv::Point2f hero_point_;
 
     // TF2 缓存和监听器
     std::shared_ptr<tf2_ros::Buffer> tf2_buffer_;

@@ -21,7 +21,8 @@ struct ReceivePacket
   float yaw;               // rad       
   float pitch;                 // rad
   float v0;
-  float motor_speed;
+  float hero_pose_x;  
+  float hero_pose_y;  
   uint16_t checksum = 0;     // crc16校验位 https://blog.csdn.net/ydyuse/article/details/105395368
 } __attribute__((packed));
 
