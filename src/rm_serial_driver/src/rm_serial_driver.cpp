@@ -224,6 +224,7 @@ void RMSerialDriver::receiveData()
 
                       receive_serial_msg_.header.frame_id = "odom";
                       receive_serial_msg_.header.stamp = this->now();
+                      receive_serial_msg_.roll = packet.roll;
                       receive_serial_msg_.pitch = packet.pitch;
                       receive_serial_msg_.yaw = packet.yaw;
                       receive_serial_msg_.v0 = packet.v0;

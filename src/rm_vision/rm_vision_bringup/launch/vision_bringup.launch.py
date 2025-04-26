@@ -77,6 +77,14 @@ def generate_launch_description():
         extra_arguments=[{'use_intra_process_comms': True}],
     ) 
 
+    bullet_detect_node = ComposableNode(
+        package='rm_bullet_detect',
+        plugin='qianli_rm_bullet_detect::BulletDetectNode',
+        name='bullet_detect_node',
+        parameters=[node_params],
+        extra_arguments=[{'use_intra_process_comms': True}],
+    )
+
 
     # delay_serial_node 会以1.5秒的周期触发执行串口驱动节点，
     # 而 delay_tracker_node 会以2.0秒的周期触发执行追踪节点。
@@ -110,6 +118,7 @@ def generate_launch_description():
                 cam_detector,
                 detector_node,
                 rune_composable_node,
+                bullet_detect_node,
             ],
             output='both',
     )
