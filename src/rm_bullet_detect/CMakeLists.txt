@@ -53,6 +53,7 @@ add_library(${PROJECT_NAME} SHARED
   src/rm_bullet_detect_node.cpp
   src/detect_bullet.cpp
   src/do_reproj.cpp
+  src/aim_corrector.cpp
 )
 ament_target_dependencies(${PROJECT_NAME} rclcpp rclcpp_components sensor_msgs geometry_msgs cv_bridge OpenCV tf2 tf2_ros image_transport tf2_geometry_msgs auto_aim_interfaces)
 
