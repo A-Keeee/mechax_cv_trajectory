@@ -100,9 +100,8 @@ auto ProjectileSimulator::get_fire_t() const -> double {
 
 
 
-// 修改输入参数，便于耦合
 // ProjectileSimulator：用于抛物线模拟和圆形包围计算
-// get_pos_by_t：给定时刻t，返回子弹是否击中目标及在相机坐标系下的位置
+// get_pos_by_t：给定时刻img_t，返回子弹是否击中目标及在相机坐标系下的位置
 auto ProjectileSimulator::get_pos_by_t(const double& t) const -> aim::HitPos {
     // w, h 的启动点是枪口 barrel_target_pos
     // camera_target_pos -- 位移 -->
@@ -122,30 +121,32 @@ auto ProjectileSimulator::get_pos_by_t(const double& t) const -> aim::HitPos {
     // bullet_xy_i_camera：子弹在相机坐标系下的二维坐标
     // target_xy_i_camera：目标在相机坐标系下的二维坐标
     // target_xyz_i_barrel：目标在枪口坐标系下的位置
-    const aimer::ShootParam shoot_param = this->aim.aim.shoot_param;
-    double k = this->get_param_k();
+    const aimer::ShootParam shoot_param = this->aim.aim.shoot_param; // 从/result/trajectory中获取
+    double k = this->get_param_k(); // 空气阻力系数
     // w：水平投影距离，基于初速度和发射角
     double w = (t - this->fire_t) * shoot_param.v0 * std::cos(shoot_param.aim_angle);
     // h：垂直方向受重力和空气阻力影响的高度计算
     double h = (k * shoot_param.v0 * std::sin(shoot_param.aim_angle) + this->g) * k * w
             / (k * k * shoot_param.v0 * std::cos(shoot_param.aim_angle))
         + this->g * std::log(1. - (k * w) / (shoot_param.v0 * std::cos(shoot_param.aim_angle))) / k
-            / k;
+            / k; 
     // 弹道轨迹仅取决于目标点
     const Eigen::Vector3d target_xyz_i_barrel =
-        this->converter->xyz_i_camera_to_xyz_i_barrel(shoot_param.target_xyz_i_camera);
+        this->converter->xyz_i_camera_to_xyz_i_barrel(shoot_param.target_xyz_i_camera); // 相机坐标系转枪口坐标系
     const Eigen::Vector3d w_norm =
-        Eigen::Vector3d(target_xyz_i_barrel(0, 0), target_xyz_i_barrel(1, 0), 0).normalized();
-    const Eigen::Vector3d h_norm = { 0., 0., 1. };
-    const Eigen::Vector3d bullet_xyz_i_barrel = w * w_norm + h * h_norm;
+        Eigen::Vector3d(target_xyz_i_barrel(0, 0), target_xyz_i_barrel(1, 0), 0).normalized(); // 从枪口看向目标，在水平面上的方向
+    const Eigen::Vector3d h_norm = { 0., 0., 1. };  //垂直方向单位向量
+    const Eigen::Vector3d bullet_xyz_i_barrel = w * w_norm + h * h_norm;// bullet_xyz_i_barrel：子弹在枪口坐标系下的坐标
     const Eigen::Vector3d bullet_xyz_i_camera =
-        this->converter->xyz_i_barrel_to_xyz_i_camera(bullet_xyz_i_barrel);
+        this->converter->xyz_i_barrel_to_xyz_i_camera(bullet_xyz_i_barrel); // 枪口坐标系转相机坐标系（归一化）
+    // /分别构造子弹和目标在枪口坐标系下的二维向量
     const Eigen::Vector2d bullet_xy_i_barrel = { bullet_xyz_i_barrel(0, 0),
                                                  bullet_xyz_i_barrel(1, 0) };
     const Eigen::Vector2d target_xy_i_barrel = { target_xyz_i_barrel(0, 0),
                                                  target_xyz_i_barrel(1, 0) };
     return aim::HitPos { bullet_xy_i_barrel.norm() >= target_xy_i_barrel.norm(),
-                         bullet_xyz_i_camera };
+                         bullet_xyz_i_camera }; //如果子弹的水平距离已经大于等于目标的水平距离，就认为“子弹已经飞过或到达目标”，hit=true；否则 hit=false
+                         // 返回模拟子弹是否击中以及在相机坐标系下的位置（z轴并未向前，只是原点在相机）
 }
 
 auto ProjectileSimulator::get_pos() const -> aim::HitPos {
@@ -154,24 +155,26 @@ auto ProjectileSimulator::get_pos() const -> aim::HitPos {
 
 // get_circle_by_t：计算给定时刻子弹在图像平面上的圆形包围框
 auto ProjectileSimulator::get_circle_by_t(const double& t) const -> aim::HitCircle {
-    aim::HitPos bullet = this->get_pos_by_t(t);
-    Eigen::Vector3d xyz_c = this->converter->pi_to_pc(bullet.pos);
+    aim::HitPos bullet = this->get_pos_by_t(t); //返回模拟子弹是否击中以及在相机坐标系下的位置
+    Eigen::Vector3d xyz_c = this->converter->pi_to_pc(bullet.pos); // 将子弹在IMU坐标系下的位置转换为相机坐标系下的坐标
     // 沿着正 y 轴与视角的叉积方向得到一个边缘坐标，以计算半径
     Eigen::Vector3d crossed = Eigen::Vector3d(0., 1., 0.).cross(xyz_c).normalized();
     Eigen::Vector3d edge_xyz_c =
-        xyz_c + crossed * base::get_param<double>("launching-mechanism.bullet.radius"); //子弹半径
+        xyz_c + crossed * base::get_param<double>("launching-mechanism.bullet.radius"); //子弹半径 想办法删掉base
     Eigen::Vector3d edge_xyz_i = this->converter->pc_to_pi(edge_xyz_c);
     cv::Point2f edge_xy_u = this->converter->pi_to_pu(edge_xyz_i);
     cv::Point2f center_xy_u = this->converter->pi_to_pu(bullet.pos);
-    float radius = aimer::math::get_dis(edge_xy_u, center_xy_u);
+    float radius = aimer::math::get_dis(edge_xy_u, center_xy_u); // 数学库可调用
     return aim::HitCircle { bullet.hit, aimer::math::CircleF(edge_xy_u, radius) };
+    //返回是否击中和子弹在图像平面上的圆形包围框
+    // 这里的圆形包围框是一个二维圆形，包含了子弹在图像平面上的位置和半径
 }
 
 auto ProjectileSimulator::get_circle() const -> aim::HitCircle {
     return this->get_circle_by_t(this->converter->get_img_t());
 }
 
-auto ProjectileSimulator::get_param_k() const -> double {
+auto ProjectileSimulator::get_param_k() const -> double { //删掉自己写死k
     return base::get_param<double>("launching-mechanism.bullet.resistance-k"); //空气阻力系数
 }
 
@@ -208,7 +211,7 @@ auto ProjectileSimulator::fit_circle(const aimer::math::CircleF& circle) const
 }
 
 /** @class AimCorrector */
-
+// AimCorrector：主校正逻辑类
 // AimHistory 中存储了最近若干次可能发射的信息
 // 模拟器 / 电控 会给出上一次发射的子弹，我们需要检查
 
@@ -224,13 +227,13 @@ AimCorrector::AimCorrector(aimer::CoordConverter* const converter):
     }
 }
 
-auto AimCorrector::add_aim(const aim::IdTLatencyAimCorrection& aim) -> void {
+auto AimCorrector::add_aim(const aim::IdTLatencyAimCorrection& aim) -> void { // 每一帧发送瞄准命令时add_aim
     this->aim_history.add_aim(aim);
 }
 
-// AimCorrector：主校正逻辑类
+
 // update_bullet_id：维护待处理射击ID队列，生成子弹模拟器
-auto AimCorrector::update_bullet_id(const int& last_shoot_id) -> void {
+auto AimCorrector::update_bullet_id(const int& last_shoot_id) -> void {// 电控检测到新的子弹被发射 把真实子弹的id传回来
     if (last_shoot_id != this->last_shoot_id) {
         this->last_shoot_id = last_shoot_id;
         if (this->pending_ids.size() + 1u <= aim::AIM_CORRECTOR_PENDING_IDS_MAX_SZ) {
@@ -339,12 +342,12 @@ auto AimCorrector::get_circles() -> std::vector<aim::IdCircle> {
 // sample_aim_errors：对新图像帧检测结果采样，更新误差滤波器
 auto AimCorrector::sample_aim_errors() -> void {
     // 记录处理前后时间，方便性能分析
-    aimer::debug::process_timer.print_process_time("before process");
+    // aimer::debug::process_timer.print_process_time("before process");
     this->bullet_detector.process_new_frame(
         this->converter->get_img_ref(),
         this->converter->get_q()
     );
-    aimer::debug::process_timer.print_process_time("after process");
+    // aimer::debug::process_timer.print_process_time("after process");
 
     // 1. 获取并去畸变检测到的圆形目标
     std::vector<aim::ImageBullet> detected = this->bullet_detector.bullets;
@@ -359,7 +362,7 @@ auto AimCorrector::sample_aim_errors() -> void {
         // 255}, d.r,
         //                                               3);
         // 在调试页面绘制检测圆心及半径
-        aimer::debug::flask_aim << aimer::debug::FlaskPoint(u.center, { 0, 255, 255 }, u.r, 3);
+        // aimer::debug::flask_aim << aimer::debug::FlaskPoint(u.center, { 0, 255, 255 }, u.r, 3);
     }
 
     // 2. 对每个模拟中的子弹进行匹配：选择代价最小的检测圆
@@ -412,21 +415,21 @@ auto AimCorrector::sample_aim_errors() -> void {
         }
     }
 
-    // 3. 将所有采样误差输出到调试页面
-    {
-        int i = 0;
-        for (auto& d: this->error_angles) {
-            i += 1;
-            aimer::debug::auto_aim_page()
-                ->sub("aim_corrector_采样数据")
-                .sub("error" + std::to_string(i))
-                .get() = fmt::format(
-                "{:.2f}, {:.2f}",
-                aimer::math::rad_to_deg(d(0, 0)),
-                aimer::math::rad_to_deg(d(1, 0))
-            );
-        }
-    }
+    // // 3. 将所有采样误差输出到调试页面
+    // {
+    //     int i = 0;
+    //     for (auto& d: this->error_angles) {
+    //         i += 1;
+    //         aimer::debug::auto_aim_page()
+    //             ->sub("aim_corrector_采样数据")
+    //             .sub("error" + std::to_string(i))
+    //             .get() = fmt::format(
+    //             "{:.2f}, {:.2f}",
+    //             aimer::math::rad_to_deg(d(0, 0)),
+    //             aimer::math::rad_to_deg(d(1, 0))
+    //         );
+    //     }
+    // }
 }
 
 auto AimCorrector::get_aim_error() const -> Eigen::Vector2d {

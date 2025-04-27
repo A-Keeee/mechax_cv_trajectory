@@ -48,6 +48,9 @@ namespace qianli_rm_bullet_detect
         angle_sub_ = this->create_subscription<auto_aim_interfaces::msg::ReceiveSerial>(
             "/angle/init", 10, std::bind(&BulletDetectNode::angle_callback, this, std::placeholders::_1));
 
+        result_sub_ = this->create_subscription<auto_aim_interfaces::msg::SendSerial>(
+            "/trajectory/result", 10, std::bind(&BulletDetectNode::result_callback, this, std::placeholders::_1));
+
 
         // 初始化tf2缓存和监听器，用于将预测的3D坐标转换到不同的坐标系
         tf2_buffer_ = std::make_shared<tf2_ros::Buffer>(this->get_clock());
@@ -129,6 +132,34 @@ namespace qianli_rm_bullet_detect
         // RCLCPP_INFO(get_logger(), "Received angles: roll = %f, pitch = %f, yaw = %f", msg.roll, msg.pitch, msg.yaw);
     }
 
+    void BulletDetectNode::result_callback(const auto_aim_interfaces::msg::SendSerial msg)
+    {
+        auto now = this->now();
+        tracking = msg.is_tracking;
+        shooting = msg.is_can_hit;
+        if (tracking)
+        {
+            tracking_time_ = now;
+            aim_corrector.add_aim(aimer::aim::IdTLatencyAimCorrection {
+                aim_id,
+                tracking_time_,
+                0.015, //写死0.015s 实际上是 图像采集时刻 到 开始做弹道预测 时刻
+                aimer::AimInfo aim_info {
+                    const aimer::math::YpdCoord& ypd,
+                    const aimer::math::YpdCoord& ypd_v,
+                    const aimer::ShootParam& shoot_param,
+                    const ::ShootMode& shoot
+                }  //
+                aim_correction // 上一次的校正的反馈
+                }
+            );
+        }
+        if (shooting)
+        {
+            shooting_time_ = now;
+        }
+    }
+
 
 
 
@@ -151,7 +182,6 @@ namespace qianli_rm_bullet_detect
             last_time_ = current_time;
         }
 
-
         cv::Mat bullet_image;
         try
         {
@@ -168,18 +198,42 @@ namespace qianli_rm_bullet_detect
 
         cv::Mat result_image; // 声明用于存储处理后图像的变量
 
-
         // 如果没有相机信息，无法计算3D点位，输出错误信息
         if (cam_info_->k.empty()) {
             RCLCPP_ERROR(get_logger(), "没有相机信息，无法计算3D点位信息");
             return;
         }
 
-        std::vector<aimer::aim::ImageBullet> bullets = bullet_detector.process_new_frame(bullet_image, cur_q); 
+        // std::vector<aimer::aim::ImageBullet> bullets = bullet_detector.process_new_frame(bullet_image, cur_q); 
 
-        //可视化检测结果
-        cv::Mat vis = bullet_detector.print_bullets();      
+        // //可视化检测结果
+        // cv::Mat vis = bullet_detector.print_bullets();      
         // cv::imshow("Bullet Detect", vis);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
         // 将处理后的图像转换为 ROS 消息并发布
         if (it_ && result_image_pub_)

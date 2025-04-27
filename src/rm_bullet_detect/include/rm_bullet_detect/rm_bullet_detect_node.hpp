@@ -37,6 +37,7 @@ public:
 
     void bullet_image_callback(const sensor_msgs::msg::Image::SharedPtr msg);
     void angle_callback(const auto_aim_interfaces::msg::ReceiveSerial msg);
+    void result_callback(const auto_aim_interfaces::msg::SendSerial msg);
 
 
 
@@ -50,6 +51,8 @@ public:
     rclcpp::Subscription<sensor_msgs::msg::CameraInfo>::SharedPtr cam_info_sub_;
     std::shared_ptr<sensor_msgs::msg::CameraInfo> cam_info_;
     rclcpp::Subscription<auto_aim_interfaces::msg::ReceiveSerial>::SharedPtr angle_sub_;
+    rclcpp::Subscription<auto_aim_interfaces::msg::SendSerial>::SharedPtr result_sub_;
+
 
     // 相机矩阵
     cv::Mat camera_matrix_;
@@ -74,6 +77,16 @@ public:
     Eigen::Matrix3d imu2optical_from_urdf() {
 
     }
+private:
+
+    bool tracking = false;
+    bool shooting = false;
+    rclcpp::Time tracking_time_;
+    rclcpp::Time shooting_time_;
+    aimer::aim::IdTLatencyAimCorrection cmd;
+    aimer::CoordConverter* converter;
+    aimer::aim::AimCorrector aim_corrector;
+    int aim_id = 0;
 
 
 };

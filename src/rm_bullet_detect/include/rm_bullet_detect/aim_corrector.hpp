@@ -11,7 +11,7 @@
 #include "aimer/auto_aim/base/defs.hpp"
 #include "detect_bullet.hpp"
 #include "aimer/base/math/filter/filter.hpp"
-#include "aimer/base/math/math.hpp"
+#include "math.hpp"
 #include "aimer/base/robot/coord_converter.hpp"
 
 namespace aimer::aim {
