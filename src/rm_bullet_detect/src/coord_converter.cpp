@@ -356,7 +356,7 @@ Eigen::Vector3d CoordConverter::pu_to_pc_norm(const cv::Point2f& pu) const {
     return pc_norm;
 }
 
-aimer::math::YpdCoord CoordConverter::pu_to_yp_c(const cv::Point2f& pu) const {
+aimer::math::YpdCoord CoordConverter::pu_to_yp_c(const cv::Point2f& pu) const { //
     return aimer::math::camera_xyz_to_ypd(this->pu_to_pc_norm(pu));
 }
 

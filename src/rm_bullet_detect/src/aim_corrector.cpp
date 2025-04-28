@@ -340,12 +340,12 @@ auto AimCorrector::get_circles() -> std::vector<aim::IdCircle> {
 }
 
 // sample_aim_errors：对新图像帧检测结果采样，更新误差滤波器
-auto AimCorrector::sample_aim_errors() -> void {
+auto AimCorrector::sample_aim_errors(Eigen::Quaterniond cur_q , cv::Mat bullet_image) -> void {
     // 记录处理前后时间，方便性能分析
     // aimer::debug::process_timer.print_process_time("before process");
     this->bullet_detector.process_new_frame(
-        this->converter->get_img_ref(),
-        this->converter->get_q()
+        bullet_image,
+        cur_q
     );
     // aimer::debug::process_timer.print_process_time("after process");
 
@@ -384,8 +384,8 @@ auto AimCorrector::sample_aim_errors() -> void {
         if (best_bullet != undistorted_detected.end()) {
             // 对匹配结果进行二分拟合，得到更精确的圆形参数
             aimer::math::CircleF fit = bullet.proj.fit_circle(*best_bullet);
-            aimer::debug::flask_aim
-                << aimer::debug::FlaskPoint(fit.center, { 255, 255, 255 }, fit.r, 3);
+            // aimer::debug::flask_aim
+            //     << aimer::debug::FlaskPoint(fit.center, { 255, 255, 255 }, fit.r, 3);
             // 理想情况（枪口指向符合视觉预期）下的朝向角，相机球面坐标系，yaw
             // 正右，pitch 正下
             aimer::math::YpdCoord fit_yp = this->converter->pu_to_yp_c(fit.center);
@@ -395,7 +395,7 @@ auto AimCorrector::sample_aim_errors() -> void {
                                          caught_yp.pitch - fit_yp.pitch };
             {
                 std::vector<double> r_vec = {
-                    base::get_param<double>("auto-aim.aim-corrector.error.r")
+                    1.0 
                 };
                 const Eigen::Vector2d& correction = bullet.proj.get_aim_ref().correction;
                 // 理想的校正后，yp_error = 0，而 aim_ref 中是之前的 error

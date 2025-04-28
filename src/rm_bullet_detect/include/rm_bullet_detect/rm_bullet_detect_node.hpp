@@ -53,7 +53,7 @@ public:
     rclcpp::Subscription<auto_aim_interfaces::msg::ReceiveSerial>::SharedPtr angle_sub_;
     rclcpp::Subscription<auto_aim_interfaces::msg::SendSerial>::SharedPtr result_sub_;
     rclcpp::Subscription<auto_aim_interfaces::msg::Target>::SharedPtr target_sub_;
-
+    message_filters::Subscriber<auto_aim_interfaces::msg::Armors> armors_sub_;
 
     // 相机矩阵
     cv::Mat camera_matrix_;
@@ -89,9 +89,10 @@ private:
     aimer::aim::AimCorrector aim_corrector;
     int aim_id = 0;
     float bullet_v0 = 0.0f;
-    float traget_x = 0.0f;
-    float traget_y = 0.0f;
-    float traget_z = 0.0f;
+    //相机坐标系(原点在相机光心，但x轴指向前方，y轴指向左方，z轴指向上方)
+    float cam_traget_x = 0.0f; 
+    float cam_traget_y = 0.0f;
+    float cam_traget_z = 0.0f;
     // float yaw = 0.0f;
     // float pitch = 0.0f;
     // float roll = 0.0f;

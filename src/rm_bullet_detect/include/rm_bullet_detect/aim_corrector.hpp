@@ -153,7 +153,7 @@ public:
     auto get_circles() -> std::vector<aim::IdCircle>;
 
     /** @brief 采样一次瞄准误差 */
-    auto sample_aim_errors() -> void;
+    auto sample_aim_errors(Eigen::Quaterniond cur_q , cv::Mat bullet_image) -> void;
 
     auto get_aim_error() const -> Eigen::Vector2d;
 

@@ -54,7 +54,9 @@ namespace qianli_rm_bullet_detect
 
         target_sub_ = this->create_subscription<auto_aim_interfaces::msg::Target>(
             "/tracker/target", rclcpp::SensorDataQoS(), std::bind(&BulletDetectNode::target_callback, this, std::placeholders::_1));
-
+        
+        armor_sub_ = this->create_subscription<auto_aim_interfaces::msg::Armors>(
+            "/detector/armors", rclcpp::SensorDataQoS(), std::bind(&BulletDetectNode::armor_callback, this, std::placeholders::_1));
 
         // 初始化tf2缓存和监听器，用于将预测的3D坐标转换到不同的坐标系
         tf2_buffer_ = std::make_shared<tf2_ros::Buffer>(this->get_clock());
@@ -123,6 +125,13 @@ namespace qianli_rm_bullet_detect
     }
 
 
+    void BulletDetectNode::armor_callback(const auto_aim_interfaces::msg::Armors msg)
+    {
+        cam_traget_x = msg.armors[0].pose.position.x;
+        cam_traget_y = msg.armors[0].pose.position.y;
+        cam_traget_z = msg.armors[0].pose.position.z;
+    }
+
 
     void BulletDetectNode::angle_callback(const auto_aim_interfaces::msg::ReceiveSerial msg)
     {
@@ -138,13 +147,7 @@ namespace qianli_rm_bullet_detect
         // RCLCPP_INFO(get_logger(), "Received angles: roll = %f, pitch = %f, yaw = %f", msg.roll, msg.pitch, msg.yaw);
     }
 
-    void BulletDetectNode::target_callback(const auto_aim_interfaces::msg::Target msg)
-    {   
-        //odom坐标系下的目标坐标
-        target_x = msg.position.x;
-        target_y = msg.position.y;
-        target_z = msg.position.z;
-    }
+
 
     void BulletDetectNode::result_callback(const auto_aim_interfaces::msg::SendSerial msg)
     {
@@ -154,6 +157,7 @@ namespace qianli_rm_bullet_detect
         if (tracking)
         {
             tracking_time_ = now;
+            aim_id += 1;
             aim_corrector.add_aim(aimer::aim::IdTLatencyAimCorrection {
                 aim_id,
                 tracking_time_,
@@ -164,18 +168,42 @@ namespace qianli_rm_bullet_detect
                     const aimer::ShootParam& shoot_param = aimer::ShootParam {
                         bullet_v0, // 子弹初速度
                         msg.pitch,    // 瞄准角度
-                        Eigen::Vector3d(target_x,target_y,target_z), // 枪口原点目标坐标
-                        Eigen::Vector3d(msg.target_x, msg.target_y, msg.target_z)  // 相机原点目标坐标
+                        Eigen::Vector3d(cam_traget_x + 0.1, cam_traget_y,cam_traget_z - 0.05 ), // 枪口原点目标坐标
+                        Eigen::Vector3d(cam_traget_x, cam_traget_y,cam_traget_z )  // 相机原点目标坐标
                     },
                     const ::ShootMode& shoot = ::ShootMode::TRACKING
                 }  //
-                aim_correction // 上一次的校正的反馈
+                const Eigen::Vector2d aim_correction = aim_corrector.get_aim_error()// 实际 - 理想 // 上一次的校正的反馈
+                //Eigen::Vector2d(0., 0.) 如果不使用则改为0反馈
                 }
             );
         }
         if (shooting)
         {
             shooting_time_ = now;
+            aim_id += 1;
+            aim_corrector.add_aim(aimer::aim::IdTLatencyAimCorrection {
+                aim_id,
+                tracking_time_,
+                0.015, //写死0.015s 实际上是 图像采集时刻 到 开始做弹道预测 时刻
+                aimer::AimInfo aim_info {
+                    const aimer::math::YpdCoord& ypd = aimer::math::YpdCoord(msg.yaw, msg.pitch, msg.distance),
+                    const aimer::math::YpdCoord& ypd_v = aimer::math::YpdCoord::get_ypd_v(aimer::math::YpdCoord(msg.yaw, msg.pitch, msg.distance)),
+                    const aimer::ShootParam& shoot_param = aimer::ShootParam {
+                        bullet_v0, // 子弹初速度
+                        msg.pitch,    // 瞄准角度
+                        Eigen::Vector3d(cam_traget_x + 0.1, cam_traget_y,cam_traget_z - 0.05 ), // 枪口原点目标坐标
+                        Eigen::Vector3d(cam_traget_x, cam_traget_y,cam_traget_z )  // 相机原点目标坐标
+                    },
+                    const ::ShootMode& shoot = ::ShootMode::SHOOT_NOW
+                }  //
+                const Eigen::Vector2d aim_correction = 
+                aim_corrector.get_aim_error()// 实际 - 理想 // 上一次的校正的反馈
+                //Eigen::Vector2d(0., 0.) 如果不使用则改为0反馈
+                }
+            );
+
+            aim_corrector.update_bullet_id(aim_id);
         }
     }
 
@@ -228,26 +256,10 @@ namespace qianli_rm_bullet_detect
         // //可视化检测结果
         // cv::Mat vis = bullet_detector.print_bullets();      
         // cv::imshow("Bullet Detect", vis);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        if (shooting)
+        {
+            aim_corrector.sample_aim_errors(cur_q, bullet_image);
+        }
 
 
 
