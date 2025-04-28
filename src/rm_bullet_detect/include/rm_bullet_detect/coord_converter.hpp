@@ -34,8 +34,8 @@ enum class ShootMode {
 struct ShootParam {
     double v0 = 0.;
     double aim_angle = 0.;
-    Eigen::Vector3d aim_xyz_i_barrel = Eigen::Vector3d::Zero();
-    Eigen::Vector3d target_xyz_i_camera = Eigen::Vector3d::Zero();
+    Eigen::Vector3d aim_xyz_i_barrel = Eigen::Vector3d::Zero(); // 装甲板相对于枪口坐标
+    Eigen::Vector3d target_xyz_i_camera = Eigen::Vector3d::Zero(); // 装甲板相对于相机坐标系坐标
     // Eigen::Vector3d target_pos = Eigen::Vector3d();
 };
 
