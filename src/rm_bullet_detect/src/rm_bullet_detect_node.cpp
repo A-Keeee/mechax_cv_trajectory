@@ -145,8 +145,8 @@ namespace qianli_rm_bullet_detect
                 tracking_time_,
                 0.015, //写死0.015s 实际上是 图像采集时刻 到 开始做弹道预测 时刻
                 aimer::AimInfo aim_info {
-                    const aimer::math::YpdCoord& ypd,
-                    const aimer::math::YpdCoord& ypd_v,
+                    const aimer::math::YpdCoord& ypd = aimer::math::YpdCoord(msg.yaw, msg.pitch, msg.distance),
+                    const aimer::math::YpdCoord& ypd_v = ,
                     const aimer::ShootParam& shoot_param,
                     const ::ShootMode& shoot
                 }  //
