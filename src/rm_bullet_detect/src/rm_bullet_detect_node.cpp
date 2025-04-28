@@ -50,6 +50,10 @@ namespace qianli_rm_bullet_detect
 
         result_sub_ = this->create_subscription<auto_aim_interfaces::msg::SendSerial>(
             "/trajectory/result", 10, std::bind(&BulletDetectNode::result_callback, this, std::placeholders::_1));
+        
+
+        target_sub_ = this->create_subscription<auto_aim_interfaces::msg::Target>(
+            "/tracker/target", rclcpp::SensorDataQoS(), std::bind(&BulletDetectNode::target_callback, this, std::placeholders::_1));
 
 
         // 初始化tf2缓存和监听器，用于将预测的3D坐标转换到不同的坐标系
@@ -134,6 +138,14 @@ namespace qianli_rm_bullet_detect
         // RCLCPP_INFO(get_logger(), "Received angles: roll = %f, pitch = %f, yaw = %f", msg.roll, msg.pitch, msg.yaw);
     }
 
+    void BulletDetectNode::target_callback(const auto_aim_interfaces::msg::Target msg)
+    {   
+        //odom坐标系下的目标坐标
+        target_x = msg.position.x;
+        target_y = msg.position.y;
+        target_z = msg.position.z;
+    }
+
     void BulletDetectNode::result_callback(const auto_aim_interfaces::msg::SendSerial msg)
     {
         auto now = this->now();
@@ -152,8 +164,8 @@ namespace qianli_rm_bullet_detect
                     const aimer::ShootParam& shoot_param = aimer::ShootParam {
                         bullet_v0, // 子弹初速度
                         msg.pitch,    // 瞄准角度
-                        Eigen::Vector3d(msg.target_x, msg.target_y, msg.target_z), // 目标坐标
-                        Eigen::Vector3d(msg.target_x, msg.target_y, msg.target_z)  // 目标坐标
+                        Eigen::Vector3d(target_x,target_y,target_z), // 枪口原点目标坐标
+                        Eigen::Vector3d(msg.target_x, msg.target_y, msg.target_z)  // 相机原点目标坐标
                     },
                     const ::ShootMode& shoot = ::ShootMode::TRACKING
                 }  //

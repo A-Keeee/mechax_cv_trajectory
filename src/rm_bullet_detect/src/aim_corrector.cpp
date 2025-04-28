@@ -138,7 +138,7 @@ auto ProjectileSimulator::get_pos_by_t(const double& t) const -> aim::HitPos {
     const Eigen::Vector3d h_norm = { 0., 0., 1. };  //垂直方向单位向量
     const Eigen::Vector3d bullet_xyz_i_barrel = w * w_norm + h * h_norm;// bullet_xyz_i_barrel：子弹在枪口坐标系下的坐标
     const Eigen::Vector3d bullet_xyz_i_camera =
-        this->converter->xyz_i_barrel_to_xyz_i_camera(bullet_xyz_i_barrel); // 枪口坐标系转相机坐标系（归一化）
+        this->converter->xyz_i_barrel_to_xyz_i_camera(bullet_xyz_i_barrel); // 枪口坐标系转相机坐标系
     // /分别构造子弹和目标在枪口坐标系下的二维向量
     const Eigen::Vector2d bullet_xy_i_barrel = { bullet_xyz_i_barrel(0, 0),
                                                  bullet_xyz_i_barrel(1, 0) };

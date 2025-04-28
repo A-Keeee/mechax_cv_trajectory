@@ -52,6 +52,7 @@ public:
     std::shared_ptr<sensor_msgs::msg::CameraInfo> cam_info_;
     rclcpp::Subscription<auto_aim_interfaces::msg::ReceiveSerial>::SharedPtr angle_sub_;
     rclcpp::Subscription<auto_aim_interfaces::msg::SendSerial>::SharedPtr result_sub_;
+    rclcpp::Subscription<auto_aim_interfaces::msg::Target>::SharedPtr target_sub_;
 
 
     // 相机矩阵
@@ -88,6 +89,13 @@ private:
     aimer::aim::AimCorrector aim_corrector;
     int aim_id = 0;
     float bullet_v0 = 0.0f;
+    float traget_x = 0.0f;
+    float traget_y = 0.0f;
+    float traget_z = 0.0f;
+    // float yaw = 0.0f;
+    // float pitch = 0.0f;
+    // float roll = 0.0f;
+    // float distance = 0.0f;
 
 
 };
