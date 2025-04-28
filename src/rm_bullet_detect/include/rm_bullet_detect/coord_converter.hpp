@@ -21,6 +21,15 @@
 namespace aimer {
 // 系统信息
 
+/// 射击模式枚举
+enum class ShootMode {
+    IDLE = 0,     // 空闲，不发射
+    TRACKING,     // 跟踪中
+    SHOOT_NOW     // 立即射击
+    // … 如有其他模式可在此处继续添加
+};
+
+
 // 用于复现的瞄准参数
 struct ShootParam {
     double v0 = 0.;

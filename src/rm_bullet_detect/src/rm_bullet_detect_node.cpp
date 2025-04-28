@@ -129,6 +129,8 @@ namespace qianli_rm_bullet_detect
             Eigen::AngleAxisd(msg.yaw * M_PI / 180.0, Eigen::Vector3d::UnitZ())
         );
 
+        bullet_v0 = msg.v0;
+
         // RCLCPP_INFO(get_logger(), "Received angles: roll = %f, pitch = %f, yaw = %f", msg.roll, msg.pitch, msg.yaw);
     }
 
@@ -146,9 +148,14 @@ namespace qianli_rm_bullet_detect
                 0.015, //写死0.015s 实际上是 图像采集时刻 到 开始做弹道预测 时刻
                 aimer::AimInfo aim_info {
                     const aimer::math::YpdCoord& ypd = aimer::math::YpdCoord(msg.yaw, msg.pitch, msg.distance),
-                    const aimer::math::YpdCoord& ypd_v = ,
-                    const aimer::ShootParam& shoot_param,
-                    const ::ShootMode& shoot
+                    const aimer::math::YpdCoord& ypd_v = aimer::math::YpdCoord::get_ypd_v(aimer::math::YpdCoord(msg.yaw, msg.pitch, msg.distance)),
+                    const aimer::ShootParam& shoot_param = aimer::ShootParam {
+                        bullet_v0, // 子弹初速度
+                        msg.pitch,    // 瞄准角度
+                        Eigen::Vector3d(msg.target_x, msg.target_y, msg.target_z), // 目标坐标
+                        Eigen::Vector3d(msg.target_x, msg.target_y, msg.target_z)  // 目标坐标
+                    },
+                    const ::ShootMode& shoot = ::ShootMode::TRACKING
                 }  //
                 aim_correction // 上一次的校正的反馈
                 }

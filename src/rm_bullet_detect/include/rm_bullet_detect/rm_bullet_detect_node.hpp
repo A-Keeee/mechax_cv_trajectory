@@ -87,6 +87,7 @@ private:
     aimer::CoordConverter* converter;
     aimer::aim::AimCorrector aim_corrector;
     int aim_id = 0;
+    float bullet_v0 = 0.0f;
 
 
 };
