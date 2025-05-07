@@ -75,6 +75,8 @@ Trajectoryer::Trajectoryer() : Node("trajectory")
 
     bias_time_pub_ = this->create_publisher<auto_aim_interfaces::msg::Bias>(
         "/bias/time", 10);
+
+    
 }
 
 //用于参数初始化，主要需要修改的参数为
@@ -83,6 +85,7 @@ void  Trajectoryer::parameters_init()
 {
     //----------------------------------------------------
     is_hero = true; // 根据情况自己修改，英雄大弹丸为1,步兵小弹丸为0
+    is_outpost = true; // 是否为击打前哨站
     //----------------------------------------------------
     if(is_hero)
     {
@@ -584,6 +587,69 @@ void Trajectoryer::target_callback(const auto_aim_interfaces::msg::Target msg)
                 result.yaw = send_yaw;
                 result.distance = distance;
             }
+
+            //前哨战处理逻辑
+            if (std::isnan(send_yaw) || std::isnan(send_pitch) || std::isnan(distance))
+            {
+                if(is_outpost) //待修改
+                {   
+                    if(yaw_list.size() >= 100)
+                    {   
+                        auto it = std::min_element(distance_list.begin(), distance_list.end());
+                        if (it != distance_list.end())
+                        {
+                            size_t min_idx  = std::distance(distance_list.begin(), it);//获取最小值的索引
+                            outpost_distance = *it; //获取最小值
+                            outpost_yaw = yaw_list[max_idx]; //获取最小值对应的yaw
+                            result.yaw = outpost_yaw;
+                            result.distance = outpost_distance;
+                            result.pitch = send_pitch;
+                            
+                        }
+                        yaw_list.clear();
+                        distance_list.clear();
+                    }
+                    else
+                    {
+                        result.is_can_hit = false;
+                        result.pitch = send_pitch;
+                        if(outpost_distance != 0.0 && outpost_yaw != 0.0)
+                        {
+                            result.yaw = outpost_yaw;
+                            result.distance = outpost_distance;
+                        }
+                        else
+                        {
+                            result.yaw = send_yaw;
+                            result.distance = distance;
+                        }
+                    }
+                    distance_list.push_back(distance);
+                    yaw_list.push_back(send_yaw);
+                    result.is_can_hit = false;
+
+                    if(abs(send_yaw - outpost_yaw) < 0.2f && abs(distance - outpost_distance) < 0.005f){
+                         // 条件满足，开始计时
+                        if(!outpost_timer_started_)
+                        {
+                            outpost_start_time_        = this->now();
+                            outpost_timer_started_     = true;
+                            delta_time = (this->now() - msg.header.stamp).seconds();
+                            fly_time = fly_t;
+                        }
+                        else
+                        {
+                            // 已经计时，检查时间是否满足条件
+                            if((this->now() - outpost_start_time_).seconds() >= outpost_time_3 - delta_time - fly_t - delay_time)
+                            {
+                                result.is_can_hit = true;
+                                // 重置状态避免重复触发
+                                outpost_timer_started_ = false;
+                            }
+                        }
+                    }
+                }
+            }
             result_pub_->publish(result);
 
             latency_count++;
@@ -647,12 +713,13 @@ void Trajectoryer::angle_callback(const auto_aim_interfaces::msg::ReceiveSerial 
         serial_bias_time = msg.serial_time;
     }
     //std::cout << "motor_speed: " << motor_speed << std::endl;
-    if(msg.v0 > 20)
+    if(msg.v0 > 13)
     {
         v0 = msg.v0;
     }
 
-    is_assist = msg.is_assist;
+    // is_assist = msg.is_assist;
+    is_assist = false;
 }
 
 void Trajectoryer::hero_callback(const geometry_msgs::msg::PointStamped msg) {
