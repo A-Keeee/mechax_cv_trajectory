@@ -628,7 +628,7 @@ void Trajectoryer::target_callback(const auto_aim_interfaces::msg::Target msg)
                     yaw_list.push_back(send_yaw);
                     result.is_can_hit = false;
 
-                    if(abs(send_yaw - outpost_yaw) < 0.2f && abs(distance - outpost_distance) < 0.005f){
+                    if(abs(send_yaw - outpost_yaw) < 0.5f && abs(distance - outpost_distance) < 0.01f){
                          // 条件满足，开始计时
                         if(!outpost_timer_started_)
                         {
