@@ -70,7 +70,7 @@ public:
     //存储前哨战yaw角度
     vector<float> yaw_list;
     vector<float> distance_list;
-    vector<float> time_list;
+    vector<float> pitch_list;
     float outpost_yaw = 0.0;
     float outpost_distance = 0.0;
     rclcpp::Time   outpost_start_time_;

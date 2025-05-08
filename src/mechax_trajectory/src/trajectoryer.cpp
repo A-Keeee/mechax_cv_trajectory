@@ -593,42 +593,34 @@ void Trajectoryer::target_callback(const auto_aim_interfaces::msg::Target msg)
             {
                 if(is_outpost) //待修改
                 {   
-                    if(yaw_list.size() >= 100)
+                    if(distance_list.size() >= 30)
                     {   
-                        auto it = std::min_element(distance_list.begin(), distance_list.end());
+                        auto it = std::max_element(distance_list.begin(), distance_list.end());
                         if (it != distance_list.end())
-                        {
-                            size_t min_idx  = std::distance(distance_list.begin(), it);//获取最小值的索引
-                            outpost_distance = *it; //获取最小值
-                            outpost_yaw = yaw_list[max_idx]; //获取最小值对应的yaw
-                            result.yaw = outpost_yaw;
-                            result.distance = outpost_distance;
-                            result.pitch = send_pitch;
-                            
-                        }
-                        yaw_list.clear();
-                        distance_list.clear();
-                    }
-                    else
-                    {
-                        result.is_can_hit = false;
-                        result.pitch = send_pitch;
-                        if(outpost_distance != 0.0 && outpost_yaw != 0.0)
-                        {
-                            result.yaw = outpost_yaw;
-                            result.distance = outpost_distance;
-                        }
-                        else
-                        {
-                            result.yaw = send_yaw;
-                            result.distance = distance;
+                        {   
+                            size_t max_idx  = std::distance(distance_list.begin(), it);//获取最大值的索引
+                            yaw.list.erase(yaw_list.begin() + max_idx); //删除最大值对应的yaw
+                            pitch.list.erase(pitch.list.begin() + max_idx); //删除最大值对应的pitch
+                            distance_list.erase(it); //删除最大值
                         }
                     }
                     distance_list.push_back(distance);
                     yaw_list.push_back(send_yaw);
+                    pitch.list.push_back(send_pitch);
                     result.is_can_hit = false;
+                    result.is_tracking = false;
 
-                    if(abs(send_yaw - outpost_yaw) < 0.5f && abs(distance - outpost_distance) < 0.01f){
+                    for(int index = 0; index < distance_list.size(); index++)
+                    {
+                        outpost_distance += distance_list[index];
+                        outpost_yaw += yaw_list[index];
+                        outpost_pitch += pitch.list[index];
+                    }
+                    outpost_distance = outpost_distance / distance_list.size();
+                    outpost_yaw = outpost_yaw / yaw_list.size();
+                    outpost_pitch = outpost_pitch / pitch.list.size();
+
+                    if(abs(send_yaw - outpost_yaw) < 0.5f && abs(distance - outpost_distance) < 0.1f){
                          // 条件满足，开始计时
                         if(!outpost_timer_started_)
                         {
