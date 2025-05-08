@@ -142,6 +142,7 @@ void Tracker::update(const Armors::SharedPtr & armors_msg)
 
   // Tracking state machine
   if (tracker_state == DETECTING) {
+    // std::cout << "DETECTING" << std::endl;
     if (matched) {
       detect_count_++;
       if (detect_count_ > tracking_thres) {
@@ -151,6 +152,7 @@ void Tracker::update(const Armors::SharedPtr & armors_msg)
     } else {
       detect_count_ = 0;
       tracker_state = LOST;
+      std::cout << "LOST" << std::endl;
     }
   } else if (tracker_state == TRACKING) {
     if (!matched) {

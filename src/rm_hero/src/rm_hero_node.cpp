@@ -33,7 +33,7 @@ namespace qianli_rm_hero
 
     void HeroNode::Hero_pose_callback(const auto_aim_interfaces::msg::ReceiveSerial msg)
     {   
-        std::cout << "debug" << std::endl;
+        
 
         // 新增帧率计算逻辑
         auto current_time = this->now();

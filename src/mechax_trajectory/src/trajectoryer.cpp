@@ -89,7 +89,7 @@ void  Trajectoryer::parameters_init()
     //----------------------------------------------------
     if(is_hero)
     {
-        v0 = 14; // m/s
+        v0 = 15.5; // m/s
     }
     else
     {
@@ -519,7 +519,8 @@ void Trajectoryer::test()
 //如果追踪到目标并且开启了自瞄模式，则解算弹道，得到需要的pitch和yaw角度
 //通过SendSerial信息类型的result发布给serial_driver
 void Trajectoryer::target_callback(const auto_aim_interfaces::msg::Target msg)
-{
+{   
+    // std::cout << "debug" << std::endl;
     is_tracking = msg.tracking;
     id = msg.id;
     armor_num = msg.armors_num;
@@ -536,9 +537,10 @@ void Trajectoryer::target_callback(const auto_aim_interfaces::msg::Target msg)
     dz = msg.dz;
 
     if (is_assist) return;
-
+    // std::cout << "debug1" << std::endl;
     if(is_tracking)
     {
+        // std::cout << "debug" << std::endl;
         auto_aim_interfaces::msg::SendSerial result;
         result.header.frame_id = "not";
         result.header.stamp = msg.header.stamp;
@@ -589,60 +591,115 @@ void Trajectoryer::target_callback(const auto_aim_interfaces::msg::Target msg)
             }
 
             //前哨战处理逻辑
-            if (std::isnan(send_yaw) || std::isnan(send_pitch) || std::isnan(distance))
+            if (!std::isnan(send_yaw) || !std::isnan(send_pitch) || !std::isnan(distance))
             {
+                // std::cout << "debug" << std::endl;
                 if(is_outpost) //待修改
                 {   
+                                            std::cout << "debug3" <<std::endl;
+
                     if(distance_list.size() >= 30)
                     {   
-                        auto it = std::max_element(distance_list.begin(), distance_list.end());
-                        if (it != distance_list.end())
+                        std::cout << "debug1" <<std::endl;
+                        float temp_distance = 0;
+                        float temp_yaw = 0;
+                        float temp_pitch = 0;
+                        auto max = std::max_element(distance_list.begin(), distance_list.end());
+                        std::cout << "debug" <<std::endl;
+                        if (max != distance_list.end())
                         {   
-                            size_t max_idx  = std::distance(distance_list.begin(), it);//获取最大值的索引
-                            yaw.list.erase(yaw_list.begin() + max_idx); //删除最大值对应的yaw
-                            pitch.list.erase(pitch.list.begin() + max_idx); //删除最大值对应的pitch
-                            distance_list.erase(it); //删除最大值
+                            size_t max_idx  = std::distance(distance_list.begin(), max);//获取最大值的索引
+                            yaw_list.erase(yaw_list.begin() + max_idx); //删除最大值对应的yaw
+                            pitch_list.erase(pitch_list.begin() + max_idx); //删除最大值对应的pitch
+                            distance_list.erase(max); //删除最大值
                         }
+                        std::cout << "1" << std::endl;
+                        for(int index = 0; index < distance_list.size(); index++)
+                        {
+                            temp_distance += distance_list[index];
+                            temp_yaw += yaw_list[index];
+                            temp_pitch += pitch_list[index];
+                        }
+                        temp_distance = temp_distance / distance_list.size();
+                        temp_yaw = temp_yaw / yaw_list.size();
+                        temp_pitch = temp_pitch / pitch_list.size();
+                        std::cout << "2" << std::endl;
+
+                        if (outpost_distance == 0 || outpost_yaw == 0 || outpost_pitch == 0){
+                            outpost_distance = temp_distance;
+                            outpost_yaw = temp_yaw;
+                            outpost_pitch = temp_pitch;
+                        }
+                        else{
+                            outpost_distance = (temp_distance+outpost_distance)/2;
+                            outpost_yaw = (temp_yaw+outpost_yaw)/2;
+                            outpost_pitch = (temp_pitch+outpost_pitch)/2;
+                        }
+                        distance_list.clear();
+                        yaw_list.clear();
+                        pitch_list.clear();
+
                     }
                     distance_list.push_back(distance);
                     yaw_list.push_back(send_yaw);
-                    pitch.list.push_back(send_pitch);
+                    pitch_list.push_back(send_pitch);
                     result.is_can_hit = false;
-                    result.is_tracking = false;
+                    result.is_tracking = true;
 
-                    for(int index = 0; index < distance_list.size(); index++)
-                    {
-                        outpost_distance += distance_list[index];
-                        outpost_yaw += yaw_list[index];
-                        outpost_pitch += pitch.list[index];
-                    }
-                    outpost_distance = outpost_distance / distance_list.size();
-                    outpost_yaw = outpost_yaw / yaw_list.size();
-                    outpost_pitch = outpost_pitch / pitch.list.size();
+                    // for(int index = 0; index < distance_list.size(); index++)
+                    // {
+                    //     outpost_distance += distance_list[index];
+                    //     outpost_yaw += yaw_list[index];
+                    //     outpost_pitch += pitch_list[index];
+                    // }
+                    // outpost_distance = outpost_distance / distance_list.size();
+                    // outpost_yaw = outpost_yaw / yaw_list.size();
+                    // outpost_pitch = outpost_pitch / pitch_list.size();
 
-                    if(abs(send_yaw - outpost_yaw) < 0.5f && abs(distance - outpost_distance) < 0.05f){
+                
+                    std::cout << "test" <<std::endl;
+
+                    if(abs(send_yaw - outpost_yaw) < 1.0f && abs(distance - outpost_distance) < 0.1f){
+                        std::cout << "ok1" << std::endl;
                         // 条件满足，开始计时
                         time_list.push_back(this->now());
                         is_outpost_list.push_back(true);
                         delta_time = (this->now() - msg.header.stamp).seconds();
                         fly_time = fly_t;
+                        start_flag = true;
                     }
+                    std::cout << "test1" <<std::endl;
 
-                    if((this->now() - time_list.back()).seconds() >= outpost_time_3 - delta_time - fly_t - delay_time && is_outpost_list.back())
-                    {
-                        result.is_can_hit = true;
-                        is_outpost_list.back() = false;
-                    }
-
-                    for(int index = 0; index < time_list.size()-1; index++) //拟合前哨战转速
-                    {
-                        if(time_list[index+1] - time_list[list] < 1.25f)
+                    if(start_flag){
+                        if((this->now() - time_list.back()).seconds() >= outpost_time_3 - delta_time - fly_t - delay_time && is_outpost_list.back())
+                        {   
+                            std::cout << "ok2" << std::endl;
+                            result.is_can_hit = true;
+                            is_outpost_list.back() = false;
+                        }
+                        for(int index = 0; index < time_list.size()-1; index++) //拟合前哨战转速
                         {
-                            outpost_time_3 = (outpost_time_3 + (time_list[index+1] - time_list[index]))/2;
+                            if((time_list[index+1] - time_list[index]).seconds() < 1.25f)
+                            {
+                                outpost_time_3 = (outpost_time_3 + (time_list[index+1] - time_list[index]).seconds())/2;
+                            }
                         }
                     }
+
+                    std::cout << "test2" <<std::endl;
+
+
+                    std::cout <<"test3"<<std::endl;
                 }
             }
+            result.pitch = -outpost_pitch;
+            result.yaw = outpost_yaw;
+            result.distance = outpost_distance;
+            std::cout << "outpost_pitch" << outpost_pitch << std::endl;
+            std::cout << "outpost_yaw" << outpost_yaw << std::endl;
+            std::cout << "send_yaw" << send_yaw << std::endl;
+            std::cout << "outpost_distance" << outpost_distance << std::endl;
+            std::cout << "outpost_time_3" << outpost_time_3 << std::endl;
             result_pub_->publish(result);
 
             latency_count++;

@@ -195,13 +195,14 @@ void ArmorTrackerNode::armorsCallback(const auto_aim_interfaces::msg::Armors::Sh
       return;
     }
   }
-
+  
   // Filter abnormal armors
   armors_msg->armors.erase(
     std::remove_if(
       armors_msg->armors.begin(), armors_msg->armors.end(),
       [this](const auto_aim_interfaces::msg::Armor & armor) {
-        return abs(armor.pose.position.z) > 1.2 ||
+        // std::cout << armor.pose.position.z << std::endl;
+        return abs(armor.pose.position.z) > 2.5 ||
                Eigen::Vector2d(armor.pose.position.x, armor.pose.position.y).norm() >
                  max_armor_distance_;
       }),
@@ -216,6 +217,7 @@ void ArmorTrackerNode::armorsCallback(const auto_aim_interfaces::msg::Armors::Sh
 
   // Update tracker
   if (tracker_->tracker_state == Tracker::LOST) {
+        // std::cout << "LOST" << std::endl;
     tracker_->init(armors_msg);
     target_msg.tracking = false;
   } else {

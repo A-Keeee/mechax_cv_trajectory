@@ -71,12 +71,13 @@ public:
     vector<float> yaw_list;
     vector<float> distance_list;
     vector<float> pitch_list;
-    vetor<rclcpp::Time> time_list;
-    vetor<bool> is_outpost_list;
+    vector<rclcpp::Time> time_list;
+    vector<bool> is_outpost_list;
     float outpost_yaw = 0.0;
     float outpost_distance = 0.0;
+    float outpost_pitch = 0.0;
     rclcpp::Time   outpost_start_time_;
-    bool outpost_timer_started_ = false;
+    bool start_flag = false;
     float delay_time = 0.001; //假设电控传输延迟1ms
     float outpost_time_3 = 2.5/3; //前哨战转一圈需要2.5s，所以每次转动120度需要2.5/3s
     float fly_time = 0.0; //飞行时间

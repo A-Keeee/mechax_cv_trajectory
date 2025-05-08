@@ -95,7 +95,7 @@ def generate_launch_description():
                 cam_detector,
                 detector_node,
                 #openvino_detector_node,
-                hero_composable_node,
+                # hero_composable_node,
             ],
             output='both',
     )
