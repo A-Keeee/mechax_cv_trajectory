@@ -78,7 +78,7 @@ public:
     float outpost_pitch = 0.0;
     rclcpp::Time   outpost_start_time_;
     bool start_flag = false;
-    float delay_time = 0.001; //假设电控传输延迟1ms
+    float delay_time = 0.3; //假设电控传输延迟1ms
     float outpost_time_3 = 2.5/3; //前哨战转一圈需要2.5s，所以每次转动120度需要2.5/3s
     float fly_time = 0.0; //飞行时间
     //------------------
