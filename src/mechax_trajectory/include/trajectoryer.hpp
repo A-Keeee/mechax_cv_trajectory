@@ -71,6 +71,8 @@ public:
     vector<float> yaw_list;
     vector<float> distance_list;
     vector<float> pitch_list;
+    vetor<rclcpp::Time> time_list;
+    vetor<bool> is_outpost_list;
     float outpost_yaw = 0.0;
     float outpost_distance = 0.0;
     rclcpp::Time   outpost_start_time_;

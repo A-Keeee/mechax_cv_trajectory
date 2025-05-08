@@ -620,24 +620,25 @@ void Trajectoryer::target_callback(const auto_aim_interfaces::msg::Target msg)
                     outpost_yaw = outpost_yaw / yaw_list.size();
                     outpost_pitch = outpost_pitch / pitch.list.size();
 
-                    if(abs(send_yaw - outpost_yaw) < 0.5f && abs(distance - outpost_distance) < 0.1f){
-                         // 条件满足，开始计时
-                        if(!outpost_timer_started_)
+                    if(abs(send_yaw - outpost_yaw) < 0.5f && abs(distance - outpost_distance) < 0.05f){
+                        // 条件满足，开始计时
+                        time_list.push_back(this->now());
+                        is_outpost_list.push_back(true);
+                        delta_time = (this->now() - msg.header.stamp).seconds();
+                        fly_time = fly_t;
+                    }
+
+                    if((this->now() - time_list.back()).seconds() >= outpost_time_3 - delta_time - fly_t - delay_time && is_outpost_list.back())
+                    {
+                        result.is_can_hit = true;
+                        is_outpost_list.back() = false;
+                    }
+
+                    for(int index = 0; index < time_list.size()-1; index++) //拟合前哨战转速
+                    {
+                        if(time_list[index+1] - time_list[list] < 1.25f)
                         {
-                            outpost_start_time_        = this->now();
-                            outpost_timer_started_     = true;
-                            delta_time = (this->now() - msg.header.stamp).seconds();
-                            fly_time = fly_t;
-                        }
-                        else
-                        {
-                            // 已经计时，检查时间是否满足条件
-                            if((this->now() - outpost_start_time_).seconds() >= outpost_time_3 - delta_time - fly_t - delay_time)
-                            {
-                                result.is_can_hit = true;
-                                // 重置状态避免重复触发
-                                outpost_timer_started_ = false;
-                            }
+                            outpost_time_3 = (outpost_time_3 + (time_list[index+1] - time_list[index]))/2;
                         }
                     }
                 }
