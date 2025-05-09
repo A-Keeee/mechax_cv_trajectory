@@ -72,6 +72,7 @@ public:
     vector<float> distance_list;
     vector<float> pitch_list;
     vector<float> fly_time_list;
+    vector<float> delta_time_list;
     vector<rclcpp::Time> time_list;
     vector<bool> is_outpost_list;
     float outpost_yaw = 0.0;
@@ -79,9 +80,10 @@ public:
     float outpost_pitch = 0.0;
     rclcpp::Time  outpost_start_time_;
     bool start_flag = false;
-    float delay_time = 0.1; //假设发弹延迟200ms
+    float delay_time = 0.23; //假设发弹延迟200ms
     float outpost_time_3 = 2.5/3; //前哨战转一圈需要2.5s，所以每次转动120度需要2.5/3s
     float fly_time = 0.0; //飞行时间
+    float delta_time_average = 0.0;
     //------------------
     float v0; // m/s
     float angle_pitch;

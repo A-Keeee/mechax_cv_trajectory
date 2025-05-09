@@ -598,13 +598,14 @@ void Trajectoryer::target_callback(const auto_aim_interfaces::msg::Target msg)
                 {   
                                             // std::cout << "debug3" <<std::endl;
 
-                    if(distance_list.size() >= 30)
+                    if(distance_list.size() >= 20)
                     {   
                         // std::cout << "debug1" <<std::endl;
                         float temp_distance = 0;
                         float temp_yaw = 0;
                         float temp_pitch = 0;
                         float temp_fly_time = 0;
+                        float temp_delta_time = 0;
                         auto max = std::max_element(distance_list.begin(), distance_list.end());
                         // std::cout << "debug" <<std::endl;
                         if (max != distance_list.end())
@@ -613,6 +614,7 @@ void Trajectoryer::target_callback(const auto_aim_interfaces::msg::Target msg)
                             yaw_list.erase(yaw_list.begin() + max_idx); //删除最大值对应的yaw
                             pitch_list.erase(pitch_list.begin() + max_idx); //删除最大值对应的pitch
                             fly_time_list.erase(fly_time_list.begin()+max_idx);
+                            delta_time_list.erase(delta_time_list.begin()+max_idx);
                             distance_list.erase(max); //删除最大值
                         }
                         // std::cout << "1" << std::endl;
@@ -622,11 +624,13 @@ void Trajectoryer::target_callback(const auto_aim_interfaces::msg::Target msg)
                             temp_yaw += yaw_list[index];
                             temp_pitch += pitch_list[index];
                             temp_fly_time += fly_time_list[index];
+                            temp_delta_time += delta_time_list[index];
                         }
                         temp_distance = temp_distance / distance_list.size();
                         temp_yaw = temp_yaw / yaw_list.size();
                         temp_pitch = temp_pitch / pitch_list.size();
                         temp_fly_time = temp_fly_time / fly_time_list.size();
+                        temp_delta_time = temp_delta_time /delta_time_list.size();
                         // std::cout << "temp_fly_time" << temp_fly_time << std::endl;
                         // std::cout << "2" << std::endl;
 
@@ -635,19 +639,24 @@ void Trajectoryer::target_callback(const auto_aim_interfaces::msg::Target msg)
                             outpost_yaw = temp_yaw;
                             outpost_pitch = temp_pitch;
                             fly_time = temp_fly_time;
+                            delta_time_average = temp_delta_time;
                         }
                         else{
-                            outpost_distance = 0.3*temp_distance+0.7*outpost_distance;
-                            outpost_yaw = 0.3*temp_yaw+0.7*outpost_yaw;
+                            outpost_distance = 0.2*temp_distance+0.8*outpost_distance;
+                            outpost_yaw = 0.2*temp_yaw+0.8*outpost_yaw;
                             outpost_pitch = 0.3*temp_pitch+0.7*outpost_pitch;
-                            fly_time = 0.3*temp_fly_time+0.7*fly_time;
+                            fly_time = 0.2*temp_fly_time+0.8*fly_time;
+                            delta_time_average = 0.2*temp_delta_time + 0.8*delta_time_average;
                         }
                         distance_list.clear();
                         yaw_list.clear();
                         pitch_list.clear();
                         fly_time_list.clear();
+                        delta_time_list.clear();
 
                     }
+                    delta_time = (this->now() - msg.header.stamp).seconds();
+                    delta_time_list.push_back(delta_time);
                     distance_list.push_back(distance);
                     yaw_list.push_back(send_yaw);
                     pitch_list.push_back(send_pitch);
@@ -669,19 +678,19 @@ void Trajectoryer::target_callback(const auto_aim_interfaces::msg::Target msg)
                 
                     // std::cout << "test" <<std::endl;
 
-                    if(abs(send_yaw - outpost_yaw) < 0.5f && abs(distance - outpost_distance) < 0.1f && start_flag == false){
+                    if(abs(send_yaw - outpost_yaw) < 0.3f && abs(distance - outpost_distance) < 0.1f && start_flag == false){
                         // std::cout << "ok1" << std::endl;
                         // 条件满足，开始计时
                         time_list.push_back(this->now());
                         outpost_start_time_ = this->now();
                         // is_outpost_list.push_back(true);
-                        delta_time = (this->now() - msg.header.stamp).seconds();
+                        
                         start_flag = true;
                     }
                     // std::cout << "test1" <<std::endl;
 
                     if(start_flag){
-                        if((this->now() - outpost_start_time_).seconds() >= outpost_time_3 - delta_time - fly_time - delay_time)
+                        if((this->now() - outpost_start_time_).seconds() >= 2*outpost_time_3 - delta_time_average - fly_time - delay_time)
                         {   
                             // std::cout << "ok2" << std::endl;
                             result.is_can_hit = true;
@@ -710,9 +719,9 @@ void Trajectoryer::target_callback(const auto_aim_interfaces::msg::Target msg)
             // std::cout << "send_yaw" << send_yaw << std::endl;
             // std::cout << "outpost_distance" << outpost_distance << std::endl;
             // std::cout << "outpost_time_3" << outpost_time_3 << std::endl;
-            std::cout << "delay:"<<outpost_time_3 - delta_time - fly_t - delay_time <<std::endl;
-            // std::cout << "delta:" <<delta_time<<std::endl;
-            std::cout << "fly_time:"<<fly_time<<std::endl;
+            std::cout << "delay:"<<outpost_time_3*2 - delta_time - fly_time - delay_time <<std::endl;
+            // std::cout << "delta:" <<delta_time_average<<std::endl;
+            // std::cout << "fly_time:"<<fly_time<<std::endl;
             // std::cout << "delay_time:" << delay_time <<std::endl;
             // std::cout << "outpost_time_3:" << outpost_time_3 <<std::endl;
 

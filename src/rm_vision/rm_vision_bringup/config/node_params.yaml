@@ -39,12 +39,12 @@
       # r_xyz_factor: 5e+8 #4e-2
       # r_yaw: 5e+8 #5e+1
 
-      sigma2_q_xyz: 0.05
-      sigma2_q_yaw: 0.05
-      sigma2_q_r: 0.05
+      sigma2_q_xyz: 0.0
+      sigma2_q_yaw: 0.0
+      sigma2_q_r: 0.0
 
-      r_xyz_factor: 4e-3
-      r_yaw: 5e-3
+      r_xyz_factor: 5e+5
+      r_yaw: 5e+5
 
     tracker:
       max_match_distance: 0.5
