@@ -600,6 +600,7 @@ void Trajectoryer::target_callback(const auto_aim_interfaces::msg::Target msg)
 
                     if(distance_list.size() >= 20)
                     {   
+                        count += 1;
                         // std::cout << "debug1" <<std::endl;
                         float temp_distance = 0;
                         float temp_yaw = 0;
@@ -642,11 +643,11 @@ void Trajectoryer::target_callback(const auto_aim_interfaces::msg::Target msg)
                             delta_time_average = temp_delta_time;
                         }
                         else{
-                            outpost_distance = 0.2*temp_distance+0.8*outpost_distance;
-                            outpost_yaw = 0.2*temp_yaw+0.8*outpost_yaw;
-                            outpost_pitch = 0.3*temp_pitch+0.7*outpost_pitch;
-                            fly_time = 0.2*temp_fly_time+0.8*fly_time;
-                            delta_time_average = 0.2*temp_delta_time + 0.8*delta_time_average;
+                            outpost_distance = (1/count)*temp_distance+(1-(1/count))*outpost_distance;
+                            outpost_yaw = (1/count)*temp_yaw+(1-(1/count))*outpost_yaw;
+                            outpost_pitch = (1/count)*temp_pitch+(1-(1/count))*outpost_pitch;
+                            fly_time = (1/count)*temp_fly_time+(1-(1/count))*fly_time;
+                            delta_time_average = (1/count)*temp_delta_time+(1-(1/count))*delta_time_average;
                         }
                         distance_list.clear();
                         yaw_list.clear();
@@ -681,13 +682,36 @@ void Trajectoryer::target_callback(const auto_aim_interfaces::msg::Target msg)
                     if(abs(send_yaw - outpost_yaw) < 0.3f && abs(distance - outpost_distance) < 0.1f && start_flag == false){
                         // std::cout << "ok1" << std::endl;
                         // 条件满足，开始计时
-                        time_list.push_back(this->now());
                         outpost_start_time_ = this->now();
                         // is_outpost_list.push_back(true);
-                        
                         start_flag = true;
                     }
                     // std::cout << "test1" <<std::endl;
+
+
+                    if(abs(send_yaw - outpost_yaw) < 0.3f && abs(distance - outpost_distance) < 0.1f && fit_flag == false){
+                        time_list.push_back(this->now());
+                        fit_flag = true;
+                    }
+
+                    if (fit_flag && time_list.size() >= 2)
+                    {
+                        float time_diff = (time_list[time_list.size()-1] - time_list[time_list.size()-2]).seconds();
+                        if (time_diff < 1.0f && time_diff > 0.5f)
+                        {
+                            diff_list.push_back(time_diff);
+                            if (diff_list.size() >= 5){
+                                float sum = 0.0f;
+                                for (int i = 0; i < diff_list.size(); i++)
+                                {
+                                    sum += diff_list[i];
+                                }
+                                float average = sum / diff_list.size();
+                                outpost_time_3 = (average + outpost_time_3)/2;
+                            }
+                        }
+
+                    }
 
                     if(start_flag){
                         if((this->now() - outpost_start_time_).seconds() >= 2*outpost_time_3 - delta_time_average - fly_time - delay_time)
@@ -696,18 +720,6 @@ void Trajectoryer::target_callback(const auto_aim_interfaces::msg::Target msg)
                             result.is_can_hit = true;
                             start_flag = false;
                         }
-
-                        // //拟合前哨战转速(可选&&待优化)
-                        // for(int index = 0; index < time_list.size()-1; index++) 
-                        // {
-                        //     if((time_list[index+1] - time_list[index]).seconds() < 1.25f)
-                        //     {   
-                        //         std::cout << "diff" << (time_list[index+1] - time_list[index]).seconds() << std::endl;
-                        //         // outpost_time_3 = (outpost_time_3 + (time_list[index+1] - time_list[index]).seconds())/2;
-                        //     }
-                        // }
-
-
                     }
                 }
             }
