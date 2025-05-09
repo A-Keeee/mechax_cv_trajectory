@@ -679,14 +679,15 @@ void Trajectoryer::target_callback(const auto_aim_interfaces::msg::Target msg)
                             start_flag = false;
                         }
 
-                        // //拟合前哨战转速(可选&&待优化)
-                        // for(int index = 0; index < time_list.size()-1; index++) 
-                        // {
-                        //     if((time_list[index+1] - time_list[index]).seconds() < 1.25f)
-                        //     {
-                        //         outpost_time_3 = (outpost_time_3 + (time_list[index+1] - time_list[index]).seconds())/2;
-                        //     }
-                        // }
+                        //拟合前哨战转速(可选&&待优化)
+                        for(int index = 0; index < time_list.size()-1; index++) 
+                        {
+                            if((time_list[index+1] - time_list[index]).seconds() < 1.25f)
+                            {   
+                                std::cout << "diff" << (time_list[index+1] - time_list[index]).seconds() << std::endl;
+                                // outpost_time_3 = (outpost_time_3 + (time_list[index+1] - time_list[index]).seconds())/2;
+                            }
+                        }
 
 
                     }
@@ -705,7 +706,6 @@ void Trajectoryer::target_callback(const auto_aim_interfaces::msg::Target msg)
             std::cout << "fly_t:"<<fly_t<<std::endl;
             std::cout << "delay_time:" << delay_time <<std::endl;
             std::cout << "outpost_time_3:" << outpost_time_3 <<std::endl;
-            std::cout << "diff" << time_list[index+1] - time_list[index] << std::endl;
 
             result_pub_->publish(result);
 
