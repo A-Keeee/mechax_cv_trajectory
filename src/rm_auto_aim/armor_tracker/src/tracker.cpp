@@ -152,7 +152,7 @@ void Tracker::update(const Armors::SharedPtr & armors_msg)
     } else {
       detect_count_ = 0;
       tracker_state = LOST;
-      std::cout << "LOST" << std::endl;
+      // std::cout << "LOST" << std::endl;
     }
   } else if (tracker_state == TRACKING) {
     if (!matched) {

@@ -15,7 +15,7 @@
 
 /armor_detector:
   ros__parameters:
-    debug: true
+    debug: false
 
     detect_color: 0
     binary_thres: 80
@@ -39,11 +39,11 @@
       # r_xyz_factor: 5e+8 #4e-2
       # r_yaw: 5e+8 #5e+1
 
-      sigma2_q_xyz: 0.0
-      sigma2_q_yaw: 0.0
-      sigma2_q_r: 0.0
+      sigma2_q_xyz: 0.05
+      sigma2_q_yaw: 0.05
+      sigma2_q_r: 0.05
 
-      r_xyz_factor: 4e-4
+      r_xyz_factor: 4e-3
       r_yaw: 5e-3
 
     tracker:
