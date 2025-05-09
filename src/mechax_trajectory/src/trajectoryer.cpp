@@ -321,24 +321,24 @@ int Trajectoryer::solve_trajectory()
 //----------------------------------------------
 //进行预测，预测出击打目标的位置
     vector<result> results;
-    float need_t = fly_t + latency_bias_time + motor_bias_time + serial_bias_time;
-    if(std::isnan(need_t))
-    {
-        need_t = 0.27;
-    }
-    if(std::isnan(fly_t))
-    {
-        fly_t = 0.14;
-    }
-    float yaw_delay = need_t * v_yaw;
-    float tar_yaw = yaw + yaw_delay;
+    // float need_t = fly_t + latency_bias_time + motor_bias_time + serial_bias_time;
+    // if(std::isnan(need_t))
+    // {
+    //     need_t = 0.27;
+    // }
+    // if(std::isnan(fly_t))
+    // {
+    //     fly_t = 0.14;
+    // }
+    // float yaw_delay = need_t * v_yaw;
+    // float tar_yaw = yaw + yaw_delay;
     int use_1 = 1;
     int i = 0;
     int idx = 0;
 //进行预测，预测出击打目标的位置
-    ros_x = ros_x + vx * need_t;
-    ros_y = ros_y + vy * need_t;
-    ros_z = ros_z + vz * need_t;
+    // ros_x = ros_x + vx * need_t;
+    // ros_y = ros_y + vy * need_t;
+    // ros_z = ros_z + vz * need_t;
 //----------------------------------------------
 //----------------------------------------------
 //进行选板，选择最适合击打的装甲板
@@ -346,12 +346,16 @@ int Trajectoryer::solve_trajectory()
     {
         for (i = 0; i<2; i++) {
         result position_result;
-        float tmp_yaw = tar_yaw + i * M_PI;
+        // float tmp_yaw = tar_yaw + i * M_PI;
         float r = r_1;
-        position_result.x = ros_x - r*cos(tmp_yaw);
-        position_result.y = ros_y - r*sin(tmp_yaw);
+        // position_result.x = ros_x - r*cos(tmp_yaw);
+        // position_result.y = ros_y - r*sin(tmp_yaw);
+        // position_result.z = ros_z;
+        // position_result.yaw = tmp_yaw;
+        position_result.x = ros_x;
+        position_result.y = ros_y;
         position_result.z = ros_z;
-        position_result.yaw = tmp_yaw;
+        position_result.yaw = yaw;
         results.push_back(position_result);
         }
 
@@ -370,12 +374,16 @@ int Trajectoryer::solve_trajectory()
     {
         for (i = 0; i<3; i++) {
         result position_result;
-        float tmp_yaw = tar_yaw + i * 2.0 * M_PI/3.0;  // 2/3PI
+        // float tmp_yaw = tar_yaw + i * 2.0 * M_PI/3.0;  // 2/3PI
         float r =  (r_1 + r_2)/2;   //理论上r1=r2 这里取个平均值
-        position_result.x = ros_x - r*cos(tmp_yaw);
-        position_result.y = ros_y - r*sin(tmp_yaw);
+        // position_result.x = ros_x - r*cos(tmp_yaw);
+        // position_result.y = ros_y - r*sin(tmp_yaw);
+        // position_result.z = ros_z;
+        // position_result.yaw = tmp_yaw;
+        position_result.x = ros_x;
+        position_result.y = ros_y;
         position_result.z = ros_z;
-        position_result.yaw = tmp_yaw;
+        position_result.yaw = yaw;
         results.push_back(position_result);
         }
             // 2       1
@@ -399,12 +407,16 @@ int Trajectoryer::solve_trajectory()
     {
         for (i = 0; i<4; i++) {
         result position_result;
-        float tmp_yaw = tar_yaw + i * M_PI/2.0;
+        // float tmp_yaw = tar_yaw + i * M_PI/2.0;
         float r = use_1 ? r_1 : r_2;
-        position_result.x = ros_x - r*cos(tmp_yaw);
-        position_result.y = ros_y - r*sin(tmp_yaw);
-        position_result.z = use_1 ? ros_z : ros_z + dz;
-        position_result.yaw = tmp_yaw;
+        // position_result.x = ros_x - r*cos(tmp_yaw);
+        // position_result.y = ros_y - r*sin(tmp_yaw);
+        // position_result.z = use_1 ? ros_z : ros_z + dz;
+        // position_result.yaw = tmp_yaw;
+        position_result.x = ros_x;
+        position_result.y = ros_y;
+        position_result.z = ros_z;
+        position_result.yaw = yaw;
         results.push_back(position_result);
         use_1 = !use_1;
         }
@@ -474,7 +486,7 @@ int Trajectoryer::solve_trajectory()
         motor_bias_time = 0.01;
     }
     bias_time_msg.header.stamp = this->now();
-    bias_time_msg.need_t = need_t;
+    // bias_time_msg.need_t = need_t;
     bias_time_msg.fly_t = fly_t;
     bias_time_msg.serial_bias_time = serial_bias_time;
     bias_time_msg.latency_bias_time = latency_bias_time;
@@ -607,17 +619,49 @@ void Trajectoryer::target_callback(const auto_aim_interfaces::msg::Target msg)
                         float temp_pitch = 0;
                         float temp_fly_time = 0;
                         float temp_delta_time = 0;
-                        auto max = std::max_element(distance_list.begin(), distance_list.end());
-                        // std::cout << "debug" <<std::endl;
-                        if (max != distance_list.end())
-                        {   
-                            size_t max_idx  = std::distance(distance_list.begin(), max);//获取最大值的索引
-                            yaw_list.erase(yaw_list.begin() + max_idx); //删除最大值对应的yaw
-                            pitch_list.erase(pitch_list.begin() + max_idx); //删除最大值对应的pitch
-                            fly_time_list.erase(fly_time_list.begin()+max_idx);
-                            delta_time_list.erase(delta_time_list.begin()+max_idx);
-                            distance_list.erase(max); //删除最大值
+                        // auto max = std::max_element(distance_list.begin(), distance_list.end());
+                        // // std::cout << "debug" <<std::endl;
+                        // if (max != distance_list.end())
+                        // {   
+                        //     size_t max_idx  = std::distance(distance_list.begin(), max);//获取最大值的索引
+                        //     yaw_list.erase(yaw_list.begin() + max_idx); //删除最大值对应的yaw
+                        //     pitch_list.erase(pitch_list.begin() + max_idx); //删除最大值对应的pitch
+                        //     fly_time_list.erase(fly_time_list.begin()+max_idx);
+                        //     delta_time_list.erase(delta_time_list.begin()+max_idx);
+                        //     distance_list.erase(max); //删除最大值
+                        // }
+
+                        {
+                            // 找出 distance_list 中值最大的前 N 个元素下标，并按从大到小顺序删除
+                            const int N = 10;
+                            // 构造 (value,index) 对
+                            std::vector<std::pair<float,int>> tmp;
+                            tmp.reserve(distance_list.size());
+                            for (int i = 0; i < (int)distance_list.size(); ++i) {
+                                tmp.emplace_back(distance_list[i], i);
+                            }
+                            // 按 value 降序排序
+                            std::sort(tmp.begin(), tmp.end(),
+                                [](auto &a, auto &b){ return a.first > b.first; });
+                            // 取前 N 个下标
+                            int remove_cnt = std::min(N, (int)tmp.size());
+                            std::vector<int> idxs(remove_cnt);
+                            for (int i = 0; i < remove_cnt; ++i) {
+                                idxs[i] = tmp[i].second;
+                            }
+                            // 下标从大到小排序，以免 erase 时影响后续下标
+                            std::sort(idxs.begin(), idxs.end(), std::greater<int>());
+                            // 批量删除对应下标元素
+                            for (int idx : idxs) {
+                                distance_list.erase(distance_list.begin() + idx);
+                                yaw_list.erase(yaw_list.begin() + idx);
+                                pitch_list.erase(pitch_list.begin() + idx);
+                                fly_time_list.erase(fly_time_list.begin() + idx);
+                                delta_time_list.erase(delta_time_list.begin() + idx);
+                            }
                         }
+
+
                         // std::cout << "1" << std::endl;
                         for(int index = 0; index < distance_list.size(); index++)
                         {
@@ -643,11 +687,11 @@ void Trajectoryer::target_callback(const auto_aim_interfaces::msg::Target msg)
                             delta_time_average = temp_delta_time;
                         }
                         else{
-                            outpost_distance = (1/count)*temp_distance+(1-(1/count))*outpost_distance;
-                            outpost_yaw = (1/count)*temp_yaw+(1-(1/count))*outpost_yaw;
-                            outpost_pitch = (1/count)*temp_pitch+(1-(1/count))*outpost_pitch;
-                            fly_time = (1/count)*temp_fly_time+(1-(1/count))*fly_time;
-                            delta_time_average = (1/count)*temp_delta_time+(1-(1/count))*delta_time_average;
+                            outpost_distance = 0.2*temp_distance+0.8*outpost_distance;
+                            outpost_yaw = 0.2*temp_yaw+0.8*outpost_yaw;
+                            outpost_pitch = 0.2*temp_pitch+0.8*outpost_pitch;
+                            fly_time = 0.2*temp_fly_time+0.8*fly_time;
+                            delta_time_average = 0.2*temp_delta_time+0.8*delta_time_average;
                         }
                         distance_list.clear();
                         yaw_list.clear();
@@ -678,9 +722,9 @@ void Trajectoryer::target_callback(const auto_aim_interfaces::msg::Target msg)
 
                 
                     // std::cout << "test" <<std::endl;
-
-                    if(abs(send_yaw - outpost_yaw) < 0.3f && abs(distance - outpost_distance) < 0.1f && start_flag == false){
-                        // std::cout << "ok1" << std::endl;
+                    std::cout <<abs(send_yaw - outpost_yaw) << ":" <<abs(distance - outpost_distance)<<std::endl;
+                    if(abs(send_yaw - outpost_yaw) < 0.2f && abs(distance - outpost_distance) < 0.2f && start_flag == false){
+                        std::cout << "ok1" << std::endl;
                         // 条件满足，开始计时
                         outpost_start_time_ = this->now();
                         // is_outpost_list.push_back(true);
@@ -707,7 +751,8 @@ void Trajectoryer::target_callback(const auto_aim_interfaces::msg::Target msg)
                                     sum += diff_list[i];
                                 }
                                 float average = sum / diff_list.size();
-                                outpost_time_3 = (average + outpost_time_3)/2;
+                                std::cout << "average:" << average << std::endl;
+                                // outpost_time_3 = (average + outpost_time_3)/2;
                             }
                         }
 
@@ -723,10 +768,11 @@ void Trajectoryer::target_callback(const auto_aim_interfaces::msg::Target msg)
                     }
                 }
             }
-            result.pitch = -send_pitch;
+            result.pitch = -outpost_pitch;
             result.yaw = outpost_yaw;
             result.distance = outpost_distance;
             // std::cout << "outpost_pitch" << outpost_pitch << std::endl;
+            // std::cout << "count" << count << std::endl;
             // std::cout << "outpost_yaw" << outpost_yaw << std::endl;
             // std::cout << "send_yaw" << send_yaw << std::endl;
             // std::cout << "outpost_distance" << outpost_distance << std::endl;
