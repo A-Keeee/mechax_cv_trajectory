@@ -85,7 +85,7 @@ void  Trajectoryer::parameters_init()
 {
     //----------------------------------------------------
     is_hero = true; // 根据情况自己修改，英雄大弹丸为1,步兵小弹丸为0
-    is_outpost = true; // 是否为击打前哨站
+    // is_outpost = true; // 是否为击打前哨站
     //----------------------------------------------------
     if(is_hero)
     {
@@ -608,8 +608,7 @@ void Trajectoryer::target_callback(const auto_aim_interfaces::msg::Target msg)
                 // std::cout << "debug" << std::endl;
                 if(is_outpost) //待修改
                 {   
-                                            // std::cout << "debug3" <<std::endl;
-
+                    // std::cout << "debug3" <<std::endl;
                     if(distance_list.size() >= 20)
                     {   
                         count += 1;
@@ -705,7 +704,6 @@ void Trajectoryer::target_callback(const auto_aim_interfaces::msg::Target msg)
                     distance_list.push_back(distance);
                     yaw_list.push_back(send_yaw);
                     pitch_list.push_back(send_pitch);
-                    // std::cout << "fly_t" <<fly_t<<std::endl;
                     fly_time_list.push_back(fly_t);
                     result.is_can_hit = false;
                     result.is_tracking = true;
@@ -767,6 +765,25 @@ void Trajectoryer::target_callback(const auto_aim_interfaces::msg::Target msg)
                         }
                     }
                 }
+                else
+                {
+                    outpost_distance = 0;
+                    outpost_yaw = 0;
+                    outpost_pitch = 0;
+                    fly_time = 0;
+                    delta_time_average = 0;
+                    count = 0;
+                    start_flag = false;
+                    fit_flag = false;
+                    time_list.clear();
+                    diff_list.clear();
+                    delta_time_list.clear();
+                    distance_list.clear();
+                    yaw_list.clear();
+                    pitch_list.clear();
+                    fly_time_list.clear();
+                }
+
             }
             result.pitch = -outpost_pitch;
             result.yaw = outpost_yaw;
@@ -853,6 +870,7 @@ void Trajectoryer::angle_callback(const auto_aim_interfaces::msg::ReceiveSerial 
 
     // is_assist = msg.is_assist;
     is_assist = false;
+    is_outpost = msg.is_outpost;
 }
 
 void Trajectoryer::hero_callback(const geometry_msgs::msg::PointStamped msg) {
